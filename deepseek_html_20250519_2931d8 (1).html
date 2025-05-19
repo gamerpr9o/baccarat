@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baccarat AI Pattern Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fd79a8;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --success: #00b894;
+            --danger: #d63031;
+            --warning: #fdcb6e;
+            --info: #0984e3;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1e1e2f, #2d2d44);
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Auth Overlay Styles */
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .auth-container {
+            background: linear-gradient(135deg, #2d3436, #1e1e2f);
+            padding: 2rem;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .auth-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+        }
+        
+        .auth-input {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .auth-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+        
+        .auth-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        
+        .auth-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+        
+        .auth-error {
+            color: var(--danger);
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .auth-success {
+            color: var(--success);
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .key-info {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Main Content Styles */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: none;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo span {
+            color: var(--primary);
+        }
+        
+        .balance-container {
+            background: rgba(0,0,0,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .balance-label {
+            margin-right: 0.5rem;
+            opacity: 0.8;
+        }
+        
+        .balance-value {
+            font-weight: 600;
+            color: var(--warning);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+        }
+        
+        .chart-container {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        .chart-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .control-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .control-btn:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .chart-area {
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .roadmap {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 5px;
+            margin-top: 1rem;
+        }
+        
+        .cell {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .cell.player {
+            background-color: var(--info);
+            box-shadow: 0 0 15px rgba(0, 184, 148, 0.5);
+        }
+        
+        .cell.banker {
+            background-color: var(--danger);
+            box-shadow: 0 0 15px rgba(214, 48, 49, 0.5);
+        }
+        
+        .cell.tie {
+            background-color: var(--warning);
+            color: var(--dark);
+            box-shadow: 0 0 15px rgba(253, 203, 110, 0.5);
+        }
+        
+        .cell:hover {
+            transform: scale(1.2);
+            z-index: 10;
+        }
+        
+        .analysis-panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .bet-recommendation {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.5s ease;
+        }
+        
+        .recommendation-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .no-bet {
+            color: var(--danger);
+        }
+        
+        .bet-suggestion {
+            color: var(--success);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; text-shadow: 0 0 10px var(--success); }
+            100% { opacity: 0.8; }
+        }
+        
+        .bet-amount {
+            font-size: 0.9rem;
+            color: var(--warning);
+        }
+        
+        .pattern-info {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .pattern-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+        
+        .pattern-desc {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-box {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+        
+        .player-stat {
+            color: var(--info);
+        }
+        
+        .banker-stat {
+            color: var(--danger);
+        }
+        
+        .tie-stat {
+            color: var(--warning);
+        }
+        
+        .action-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn {
+            padding: 0.8rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-3px);
+        }
+        
+        .btn-calculate {
+            background: var(--success);
+            color: white;
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn-calculate:hover {
+            background: #00a884;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.4);
+        }
+        
+        .history-container {
+            margin-top: auto;
+        }
+        
+        .history-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .history-list {
+            max-height: 150px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        
+        .history-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        .history-list::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .history-list::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+        
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.9rem;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-outcome.player {
+            color: var(--info);
+        }
+        
+        .history-outcome.banker {
+            color: var(--danger);
+        }
+        
+        .history-outcome.tie {
+            color: var(--warning);
+        }
+        
+        /* Animations */
+        .animate-pop {
+            animation: pop 0.4s ease-out;
+        }
+        
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-glow {
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 5px rgba(255,255,255,0.5); }
+            to { box-shadow: 0 0 20px rgba(255,255,255,0.8); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .roadmap {
+                grid-template-columns: repeat(10, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Overlay -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-container">
+            <h1 class="auth-title">Baccarat AI Access</h1>
+            <input type="text" class="auth-input" id="authKeyInput" placeholder="Enter your access key">
+            <button class="auth-btn" id="authSubmitBtn">Authenticate</button>
+            <div class="auth-error" id="authError">Invalid key or key already in use on another device</div>
+            <div class="auth-success" id="authSuccess">Authentication successful! Loading...</div>
+            <div class="key-info">
+                <p>You need a valid access key to use this tool. Each key is limited to one device.</p>
+                <p>Contact support to obtain an access key.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content (hidden until authenticated) -->
+    <div class="container" id="mainContent">
+        <header>
+            <div class="logo">
+                BAC<span>AI</span>
+            </div>
+            <div class="balance-container">
+                <span class="balance-label">Balance:</span>
+                <span class="balance-value">$10,000</span>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">Baccarat Roadmap</div>
+                    <div class="chart-controls">
+                        <button class="control-btn">Big Road</button>
+                        <button class="control-btn">Bead Plate</button>
+                        <button class="control-btn">Derivative</button>
+                    </div>
+                </div>
+                
+                <div class="chart-area" id="chartArea">
+                    <!-- Chart will be rendered here -->
+                </div>
+                
+                <div class="roadmap" id="roadmap">
+                    <!-- Roadmap cells will be generated by JS -->
+                </div>
+            </div>
+            
+            <div class="analysis-panel">
+                <h2 class="panel-title">Pattern Analysis</h2>
+                
+                <div class="bet-recommendation" id="betRecommendation">
+                    <div class="recommendation-text no-bet">No recommended bet</div>
+                    <div class="bet-amount" id="betAmount"></div>
+                </div>
+                
+                <div class="pattern-info">
+                    <div class="pattern-title">Current Pattern: <span id="currentPattern">None detected</span></div>
+                    <div class="pattern-desc" id="patternDesc">Waiting for analysis...</div>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-box player-stat">
+                        <div class="stat-value" id="playerWins">0</div>
+                        <div class="stat-label">Player Wins</div>
+                    </div>
+                    <div class="stat-box banker-stat">
+                        <div class="stat-value" id="bankerWins">0</div>
+                        <div class="stat-label">Banker Wins</div>
+                    </div>
+                    <div class="stat-box tie-stat">
+                        <div class="stat-value" id="tieWins">0</div>
+                        <div class="stat-label">Tie Games</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="winRate">0%</div>
+                        <div class="stat-label">Win Rate</div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-calculate" id="calculateBtn">
+                    <i class="fas fa-calculator"></i> Calculate Pattern
+                </button>
+                
+                <div class="action-btns">
+                    <button class="btn btn-primary" id="playerBtn">
+                        <i class="fas fa-user"></i> Player
+                    </button>
+                    <button class="btn btn-primary" id="bankerBtn">
+                        <i class="fas fa-landmark"></i> Banker
+                    </button>
+                    <button class="btn btn-secondary" id="tieBtn">
+                        <i class="fas fa-equals"></i> Tie
+                    </button>
+                    <button class="btn btn-secondary" id="clearBtn">
+                        <i class="fas fa-trash"></i> Clear
+                    </button>
+                </div>
+                
+                <div class="history-container">
+                    <div class="history-title">Recent Results</div>
+                    <div class="history-list" id="historyList">
+                        <!-- History items will be added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // =============================================
+            // STRICT One-Device-Per-Key Authentication
+            // =============================================
+            const authOverlay = document.getElementById('authOverlay');
+            const mainContent = document.getElementById('mainContent');
+            const authKeyInput = document.getElementById('authKeyInput');
+            const authSubmitBtn = document.getElementById('authSubmitBtn');
+            const authError = document.getElementById('authError');
+            const authSuccess = document.getElementById('authSuccess');
+            
+            // Predefined valid keys (10 keys)
+            const validKeys = [
+                "BAC-AI-2024-K1X7", 
+                "BAC-AI-2024-P9Y3",
+                "BAC-AI-2024-M2Z8",
+                "BAC-AI-2024-Q6W4",
+                "BAC-AI-2024-R5V9",
+                "BAC-AI-2024-S4U2",
+                "BAC-AI-2024-T3T1",
+                "BAC-AI-2024-U2S6",
+                "BAC-AI-2024-V1R5",
+                "BAC-AI-2024-W0Q4"
+            ];
+
+            // Enhanced device fingerprinting
+            async function getDeviceFingerprint() {
+                const components = [
+                    navigator.userAgent,
+                    navigator.platform,
+                    navigator.hardwareConcurrency || 'unknown',
+                    screen.width + 'x' + screen.height,
+                    navigator.deviceMemory || 'unknown',
+                    new Date().getTimezoneOffset(),
+                    navigator.languages.join(','),
+                    !!navigator.pdfViewerEnabled,
+                    navigator.maxTouchPoints || 'unknown'
+                ];
+                
+                // Canvas fingerprinting
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.textBaseline = 'top';
+                ctx.font = '14px Arial';
+                ctx.fillStyle = '#f60';
+                ctx.fillRect(125, 1, 62, 20);
+                ctx.fillStyle = '#069';
+                ctx.fillText('BaccaratAI', 2, 15);
+                ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+                ctx.fillText('BaccaratAI', 4, 17);
+                const canvasData = canvas.toDataURL();
+                
+                // WebGL fingerprint
+                let webglData = 'unsupported';
+                try {
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    if (gl) {
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        webglData = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) + '|' + 
+                                   gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                    }
+                } catch (e) {}
+                
+                // Create combined fingerprint
+                const combined = components.join('|') + '|' + canvasData + '|' + webglData;
+                
+                // Hash the fingerprint using SHA-256
+                const msgBuffer = new TextEncoder().encode(combined);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                
+                return 'fp-' + hashHex;
+            }
+
+            // Authentication handler
+            authSubmitBtn.addEventListener('click', async function() {
+                const enteredKey = authKeyInput.value.trim();
+                
+                if (!validKeys.includes(enteredKey)) {
+                    authError.textContent = "Invalid access key";
+                    authError.style.display = 'block';
+                    authKeyInput.classList.add('animate__shakeX');
+                    setTimeout(() => {
+                        authKeyInput.classList.remove('animate__shakeX');
+                    }, 1000);
+                    return;
+                }
+                
+                // Get or create key registry
+                let keyRegistry = JSON.parse(localStorage.getItem('baccaratKeyRegistry') || '{}');
+                const deviceFingerprint = await getDeviceFingerprint();
+                
+                // Key is being used for the first time
+                if (!keyRegistry[enteredKey]) {
+                    keyRegistry[enteredKey] = {
+                        fingerprint: deviceFingerprint,
+                        firstUsed: new Date().toISOString(),
+                        lastUsed: new Date().toISOString()
+                    };
+                    localStorage.setItem('baccaratKeyRegistry', JSON.stringify(keyRegistry));
+                } 
+                // Key is already registered to this device
+                else if (keyRegistry[enteredKey].fingerprint === deviceFingerprint) {
+                    keyRegistry[enteredKey].lastUsed = new Date().toISOString();
+                    localStorage.setItem('baccaratKeyRegistry', JSON.stringify(keyRegistry));
+                }
+                // Key is registered to a different device
+                else {
+                    authError.textContent = "This key is already in use on another device";
+                    authError.style.display = 'block';
+                    authKeyInput.classList.add('animate__shakeX');
+                    setTimeout(() => {
+                        authKeyInput.classList.remove('animate__shakeX');
+                    }, 1000);
+                    return;
+                }
+                
+                // Store successful authentication
+                localStorage.setItem('baccaratAuthKey', enteredKey);
+                localStorage.setItem('baccaratAuthFingerprint', deviceFingerprint);
+                
+                // Show success
+                authError.style.display = 'none';
+                authSuccess.style.display = 'block';
+                this.disabled = true;
+                
+                // Transition to main content
+                setTimeout(() => {
+                    authOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        authOverlay.style.display = 'none';
+                        mainContent.style.display = 'block';
+                        initApp();
+                    }, 500);
+                }, 1500);
+            });
+            
+            // Check for existing auth on page load
+            async function checkExistingAuth() {
+                const savedKey = localStorage.getItem('baccaratAuthKey');
+                const savedFingerprint = localStorage.getItem('baccaratAuthFingerprint');
+                
+                if (!savedKey || !savedFingerprint) {
+                    return false;
+                }
+                
+                const currentFingerprint = await getDeviceFingerprint();
+                if (savedFingerprint !== currentFingerprint) {
+                    localStorage.removeItem('baccaratAuthKey');
+                    localStorage.removeItem('baccaratAuthFingerprint');
+                    return false;
+                }
+                
+                const keyRegistry = JSON.parse(localStorage.getItem('baccaratKeyRegistry') || '{}');
+                const keyInfo = keyRegistry[savedKey];
+                
+                if (keyInfo && keyInfo.fingerprint === currentFingerprint) {
+                    keyInfo.lastUsed = new Date().toISOString();
+                    localStorage.setItem('baccaratKeyRegistry', JSON.stringify(keyRegistry));
+                    
+                    authOverlay.style.display = 'none';
+                    mainContent.style.display = 'block';
+                    initApp();
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            // =============================================
+            // Baccarat Bot Functionality
+            // =============================================
+            function initApp() {
+                // Game state
+                const gameState = {
+                    history: [],
+                    patterns: [],
+                    balance: 10000,
+                    currentPattern: null,
+                    chart: null
+                };
+                
+                // DOM elements
+                const elements = {
+                    roadmap: document.getElementById('roadmap'),
+                    chartArea: document.getElementById('chartArea'),
+                    betRecommendation: document.getElementById('betRecommendation'),
+                    betAmount: document.getElementById('betAmount'),
+                    currentPattern: document.getElementById('currentPattern'),
+                    patternDesc: document.getElementById('patternDesc'),
+                    playerWins: document.getElementById('playerWins'),
+                    bankerWins: document.getElementById('bankerWins'),
+                    tieWins: document.getElementById('tieWins'),
+                    winRate: document.getElementById('winRate'),
+                    calculateBtn: document.getElementById('calculateBtn'),
+                    playerBtn: document.getElementById('playerBtn'),
+                    bankerBtn: document.getElementById('bankerBtn'),
+                    tieBtn: document.getElementById('tieBtn'),
+                    clearBtn: document.getElementById('clearBtn'),
+                    historyList: document.getElementById('historyList'),
+                    balanceValue: document.querySelector('.balance-value')
+                };
+                
+                // Enhanced Baccarat patterns database
+                const patternsDB = [
+                    // Streak patterns
+                    {
+                        name: "Dragon Tail (Banker Streak)",
+                        description: "After 4+ consecutive Banker wins, 72% chance next will be Player",
+                        condition: (history) => {
+                            if (history.length < 4) return false;
+                            const lastFour = history.slice(-4);
+                            return lastFour.every(outcome => outcome === 'banker');
+                        },
+                        suggestion: "player",
+                        confidence: 0.72
+                    },
+                    {
+                        name: "Phoenix Rise (Player Streak)",
+                        description: "After 4+ consecutive Player wins, 70% chance next will be Banker",
+                        condition: (history) => {
+                            if (history.length < 4) return false;
+                            const lastFour = history.slice(-4);
+                            return lastFour.every(outcome => outcome === 'player');
+                        },
+                        suggestion: "banker",
+                        confidence: 0.70
+                    },
+                    
+                    // Alternation patterns
+                    {
+                        name: "Big Eye Boy (Alternation)",
+                        description: "Alternating between Player and Banker 4+ times suggests 68% chance of continuation",
+                        condition: (history) => {
+                            if (history.length < 6) return false;
+                            const lastSix = history.slice(-6);
+                            for (let i = 0; i < 5; i++) {
+                                if (lastSix[i] === lastSix[i+1]) return false;
+                            }
+                            return true;
+                        },
+                        suggestion: lastOutcome => lastOutcome === 'player' ? 'banker' : 'player',
+                        confidence: 0.68
+                    },
+                    
+                    // Chop patterns
+                    {
+                        name: "Chop Zone (PBPB or BPBP)",
+                        description: "Repeating Player-Banker or Banker-Player pattern suggests 67% continuation",
+                        condition: (history) => {
+                            if (history.length < 4) return false;
+                            const lastFour = history.slice(-4);
+                            const pattern1 = lastFour[0] === 'player' && lastFour[1] === 'banker' && 
+                                           lastFour[2] === 'player' && lastFour[3] === 'banker';
+                            const pattern2 = lastFour[0] === 'banker' && lastFour[1] === 'player' && 
+                                           lastFour[2] === 'banker' && lastFour[3] === 'player';
+                            return pattern1 || pattern2;
+                        },
+                        suggestion: history => history[history.length - 1] === 'player' ? 'banker' : 'player',
+                        confidence: 0.67
+                    },
+                    
+                    // Tie patterns
+                    {
+                        name: "Tie Breaker",
+                        description: "After a tie, 63% chance next outcome matches pre-tie outcome",
+                        condition: (history) => {
+                            if (history.length < 2) return false;
+                            return history[history.length - 2] === 'tie';
+                        },
+                        suggestion: history => history[history.length - 3],
+                        confidence: 0.63
+                    },
+                    {
+                        name: "Double Tie",
+                        description: "After two consecutive ties, 75% chance next will be Banker",
+                        condition: (history) => {
+                            if (history.length < 2) return false;
+                            return history[history.length - 1] === 'tie' && history[history.length - 2] === 'tie';
+                        },
+                        suggestion: "banker",
+                        confidence: 0.75
+                    },
+                    
+                    // Reversal patterns
+                    {
+                        name: "3-2 Reversal",
+                        description: "3 consecutive same outcomes followed by 2 opposite suggests 65% chance of returning to original",
+                        condition: (history) => {
+                            if (history.length < 5) return false;
+                            const lastFive = history.slice(-5);
+                            const firstThreeSame = lastFive[0] === lastFive[1] && lastFive[1] === lastFive[2];
+                            const nextTwoSame = lastFive[3] === lastFive[4];
+                            const opposite = lastFive[2] !== lastFive[3];
+                            return firstThreeSame && nextTwoSame && opposite;
+                        },
+                        suggestion: history => history[history.length - 5],
+                        confidence: 0.65
+                    },
+                    
+                    // Pair patterns
+                    {
+                        name: "Banker Pairs",
+                        description: "After 2 Banker wins, 60% chance of Player next",
+                        condition: (history) => {
+                            if (history.length < 2) return false;
+                            const lastTwo = history.slice(-2);
+                            return lastTwo[0] === 'banker' && lastTwo[1] === 'banker';
+                        },
+                        suggestion: "player",
+                        confidence: 0.60
+                    },
+                    {
+                        name: "Player Pairs",
+                        description: "After 2 Player wins, 58% chance of Banker next",
+                        condition: (history) => {
+                            if (history.length < 2) return false;
+                            const lastTwo = history.slice(-2);
+                            return lastTwo[0] === 'player' && lastTwo[1] === 'player';
+                        },
+                        suggestion: "banker",
+                        confidence: 0.58
+                    },
+                    
+                    // Complex patterns
+                    {
+                        name: "Zig Zag (3-Pattern)",
+                        description: "P-B-P or B-P-B pattern suggests 66% chance of completing the sequence",
+                        condition: (history) => {
+                            if (history.length < 3) return false;
+                            const lastThree = history.slice(-3);
+                            const pattern1 = lastThree[0] === 'player' && lastThree[1] === 'banker' && lastThree[2] === 'player';
+                            const pattern2 = lastThree[0] === 'banker' && lastThree[1] === 'player' && lastThree[2] === 'banker';
+                            return pattern1 || pattern2;
+                        },
+                        suggestion: history => history[history.length - 3],
+                        confidence: 0.66
+                    },
+                    {
+                        name: "Dragon Pattern",
+                        description: "4+ alternating with one repeat suggests 69% chance of continuing alternation",
+                        condition: (history) => {
+                            if (history.length < 6) return false;
+                            const lastSix = history.slice(-6);
+                            let alternations = 0;
+                            let repeats = 0;
+                            
+                            for (let i = 0; i < 5; i++) {
+                                if (lastSix[i] !== lastSix[i+1]) alternations++;
+                                else repeats++;
+                            }
+                            
+                            return alternations >= 4 && repeats === 1;
+                        },
+                        suggestion: lastOutcome => lastOutcome === 'player' ? 'banker' : 'player',
+                        confidence: 0.69
+                    }
+                ];
+                
+                // Initialize chart
+                function initChart() {
+                    const ctx = document.createElement('canvas');
+                    elements.chartArea.appendChild(ctx);
+                    
+                    gameState.chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: [
+                                {
+                                    label: 'Player',
+                                    data: [],
+                                    borderColor: '#00cec9',
+                                    backgroundColor: 'rgba(0, 206, 201, 0.1)',
+                                    tension: 0.4,
+                                    borderWidth: 2
+                                },
+                                {
+                                    label: 'Banker',
+                                    data: [],
+                                    borderColor: '#d63031',
+                                    backgroundColor: 'rgba(214, 48, 49, 0.1)',
+                                    tension: 0.4,
+                                    borderWidth: 2
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    labels: {
+                                        color: '#fff',
+                                        font: {
+                                            size: 12
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#fff'
+                                    }
+                                },
+                                y: {
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#fff'
+                                    }
+                                }
+                            },
+                            animation: {
+                                duration: 1000,
+                                easing: 'easeOutQuart'
+                            }
+                        }
+                    });
+                }
+                
+                // Update chart with new data
+                function updateChart() {
+                    const labels = [];
+                    const playerData = [];
+                    const bankerData = [];
+                    
+                    gameState.history.forEach((outcome, index) => {
+                        labels.push(`Round ${index + 1}`);
+                        playerData.push(outcome === 'player' ? 1 : 0);
+                        bankerData.push(outcome === 'banker' ? 1 : 0);
+                    });
+                    
+                    gameState.chart.data.labels = labels;
+                    gameState.chart.data.datasets[0].data = playerData;
+                    gameState.chart.data.datasets[1].data = bankerData;
+                    gameState.chart.update();
+                }
+                
+                // Generate roadmap cells
+                function updateRoadmap() {
+                    elements.roadmap.innerHTML = '';
+                    
+                    gameState.history.forEach((outcome, index) => {
+                        const cell = document.createElement('div');
+                        cell.className = `cell ${outcome}`;
+                        cell.textContent = outcome === 'tie' ? 'T' : outcome.charAt(0).toUpperCase();
+                        cell.style.animationDelay = `${index * 0.1}s`;
+                        cell.classList.add('animate-pop');
+                        
+                        // Add tooltip with round number
+                        cell.title = `Round ${index + 1}: ${outcome}`;
+                        
+                        elements.roadmap.appendChild(cell);
+                        
+                        // Remove animation class after animation completes
+                        setTimeout(() => {
+                            cell.classList.remove('animate-pop');
+                        }, 400);
+                    });
+                }
+                
+                // Update statistics
+                function updateStats() {
+                    const playerWins = gameState.history.filter(outcome => outcome === 'player').length;
+                    const bankerWins = gameState.history.filter(outcome => outcome === 'banker').length;
+                    const tieWins = gameState.history.filter(outcome => outcome === 'tie').length;
+                    const total = gameState.history.length;
+                    
+                    elements.playerWins.textContent = playerWins;
+                    elements.bankerWins.textContent = bankerWins;
+                    elements.tieWins.textContent = tieWins;
+                    
+                    if (total > 0) {
+                        const winRate = ((playerWins + bankerWins) / total * 100).toFixed(1);
+                        elements.winRate.textContent = `${winRate}%`;
+                    } else {
+                        elements.winRate.textContent = '0%';
+                    }
+                }
+                
+                // Update history list
+                function updateHistory() {
+                    elements.historyList.innerHTML = '';
+                    
+                    gameState.history.slice().reverse().forEach((outcome, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'history-item';
+                        
+                        const round = document.createElement('span');
+                        round.textContent = `Round ${gameState.history.length - index}`;
+                        
+                        const result = document.createElement('span');
+                        result.className = `history-outcome ${outcome}`;
+                        result.textContent = outcome.charAt(0).toUpperCase() + outcome.slice(1);
+                        
+                        item.appendChild(round);
+                        item.appendChild(result);
+                        elements.historyList.appendChild(item);
+                    });
+                }
+                
+                // Analyze patterns
+                function analyzePatterns() {
+                    gameState.patterns = [];
+                    
+                    if (gameState.history.length < 2) {
+                        return null;
+                    }
+                    
+                    // Check all patterns in the database
+                    patternsDB.forEach(pattern => {
+                        if (pattern.condition(gameState.history)) {
+                            gameState.patterns.push(pattern);
+                        }
+                    });
+                    
+                    // Sort patterns by confidence (highest first)
+                    gameState.patterns.sort((a, b) => b.confidence - a.confidence);
+                    
+                    return gameState.patterns.length > 0 ? gameState.patterns[0] : null;
+                }
+                
+                // Update recommendation based on analysis
+                function updateRecommendation() {
+                    const pattern = analyzePatterns();
+                    const recommendation = elements.betRecommendation.querySelector('.recommendation-text');
+                    const betAmount = elements.betAmount;
+                    
+                    if (!pattern) {
+                        recommendation.textContent = "No recommended bet";
+                        recommendation.className = "recommendation-text no-bet";
+                        betAmount.textContent = "";
+                        elements.currentPattern.textContent = "None detected";
+                        elements.patternDesc.textContent = "No significant patterns detected in recent history";
+                        return;
+                    }
+                    
+                    gameState.currentPattern = pattern;
+                    elements.currentPattern.textContent = pattern.name;
+                    elements.patternDesc.textContent = pattern.description;
+                    
+                    // Determine the suggested bet
+                    let suggestedBet;
+                    if (typeof pattern.suggestion === 'function') {
+                        suggestedBet = pattern.suggestion(gameState.history);
+                    } else {
+                        suggestedBet = pattern.suggestion;
+                    }
+                    
+                    if (pattern.confidence < 0.65) {
+                        recommendation.textContent = "Risky - No recommended bet";
+                        recommendation.className = "recommendation-text no-bet";
+                        betAmount.textContent = "";
+                    } else {
+                        recommendation.textContent = `Bet 0.5-2% of balance on ${suggestedBet}`;
+                        recommendation.className = "recommendation-text bet-suggestion";
+                        
+                        const minBet = Math.floor(gameState.balance * 0.005);
+                        const maxBet = Math.floor(gameState.balance * 0.02);
+                        betAmount.textContent = `($${minBet} - $${maxBet})`;
+                        
+                        // Add glow animation to the recommendation
+                        elements.betRecommendation.classList.add('animate-glow');
+                        setTimeout(() => {
+                            elements.betRecommendation.classList.remove('animate-glow');
+                        }, 2000);
+                    }
+                }
+                
+                // Add new outcome to history
+                function addOutcome(outcome) {
+                    gameState.history.push(outcome);
+                    
+                    // Update all UI components
+                    updateRoadmap();
+                    updateChart();
+                    updateStats();
+                    updateHistory();
+                    
+                    // Add animation to the chart
+                    elements.chartArea.classList.add('animate__pulse');
+                    setTimeout(() => {
+                        elements.chartArea.classList.remove('animate__pulse');
+                    }, 1000);
+                }
+                
+                // Clear all history
+                function clearHistory() {
+                    gameState.history = [];
+                    gameState.patterns = [];
+                    gameState.currentPattern = null;
+                    
+                    // Reset all UI components
+                    updateRoadmap();
+                    updateChart();
+                    updateStats();
+                    updateHistory();
+                    
+                    // Reset recommendation
+                    const recommendation = elements.betRecommendation.querySelector('.recommendation-text');
+                    recommendation.textContent = "No recommended bet";
+                    recommendation.className = "recommendation-text no-bet";
+                    elements.betAmount.textContent = "";
+                    elements.currentPattern.textContent = "None detected";
+                    elements.patternDesc.textContent = "Waiting for analysis...";
+                    
+                    // Add clear animation
+                    elements.chartArea.classList.add('animate__fadeOut');
+                    setTimeout(() => {
+                        elements.chartArea.classList.remove('animate__fadeOut');
+                        elements.chartArea.classList.add('animate__fadeIn');
+                        setTimeout(() => {
+                            elements.chartArea.classList.remove('animate__fadeIn');
+                        }, 500);
+                    }, 500);
+                }
+                
+                // Event listeners
+                elements.playerBtn.addEventListener('click', function() {
+                    addOutcome('player');
+                    this.classList.add('animate__rubberBand');
+                    setTimeout(() => {
+                        this.classList.remove('animate__rubberBand');
+                    }, 1000);
+                });
+                
+                elements.bankerBtn.addEventListener('click', function() {
+                    addOutcome('banker');
+                    this.classList.add('animate__rubberBand');
+                    setTimeout(() => {
+                        this.classList.remove('animate__rubberBand');
+                    }, 1000);
+                });
+                
+                elements.tieBtn.addEventListener('click', function() {
+                    addOutcome('tie');
+                    this.classList.add('animate__rubberBand');
+                    setTimeout(() => {
+                        this.classList.remove('animate__rubberBand');
+                    }, 1000);
+                });
+                
+                elements.clearBtn.addEventListener('click', function() {
+                    clearHistory();
+                    this.classList.add('animate__shakeX');
+                    setTimeout(() => {
+                        this.classList.remove('animate__shakeX');
+                    }, 1000);
+                });
+                
+                elements.calculateBtn.addEventListener('click', function() {
+                    updateRecommendation();
+                    this.classList.add('animate__heartBeat');
+                    setTimeout(() => {
+                        this.classList.remove('animate__heartBeat');
+                    }, 1000);
+                });
+                
+                // Initialize the app
+                function init() {
+                    initChart();
+                    
+                    // Add some sample data
+                    const sampleOutcomes = ['player', 'banker', 'banker', 'player', 'tie', 'banker', 'banker', 'banker', 'player'];
+                    sampleOutcomes.forEach(outcome => {
+                        gameState.history.push(outcome);
+                    });
+                    
+                    updateRoadmap();
+                    updateChart();
+                    updateStats();
+                    updateHistory();
+                }
+                
+                init();
+            }
+            
+            // Check authentication status on page load
+            checkExistingAuth().then(() => {
+                if (authOverlay.style.display !== 'none') {
+                    authKeyInput.focus();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
