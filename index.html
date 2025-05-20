@@ -123,6 +123,13 @@
             opacity: 0.8;
         }
         
+        .time-remaining {
+            margin-top: 1rem;
+            color: var(--warning);
+            font-weight: bold;
+            display: none;
+        }
+        
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -180,6 +187,26 @@
         .balance-value {
             font-weight: 600;
             color: var(--warning);
+        }
+        
+        .time-container {
+            background: rgba(0,0,0,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-left: 1rem;
+        }
+        
+        .time-label {
+            margin-right: 0.5rem;
+            opacity: 0.8;
+        }
+        
+        .time-value {
+            font-weight: 600;
+            color: var(--info);
         }
         
         .main-content {
@@ -536,6 +563,16 @@
                 grid-template-columns: 1fr;
             }
             
+            header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .balance-container, .time-container {
+                margin-left: 0;
+            }
+            
             .roadmap {
                 grid-template-columns: repeat(10, 1fr);
             }
@@ -551,9 +588,10 @@
             <button class="auth-btn" id="authSubmitBtn">Authenticate</button>
             <div class="auth-error" id="authError">Invalid key or key already in use on another device</div>
             <div class="auth-success" id="authSuccess">Authentication successful! Loading...</div>
+            <div class="time-remaining" id="timeRemaining"></div>
             <div class="key-info">
                 <p>You need a valid access key to use this tool. Each key is limited to one device.</p>
-                <p>Contact support to obtain an access key.</p>
+                <p>Keys expire after the time limit shown after authentication.</p>
             </div>
         </div>
     </div>
@@ -564,9 +602,15 @@
             <div class="logo">
                 BAC<span>AI</span>
             </div>
-            <div class="balance-container">
-                <span class="balance-label">Balance:</span>
-                <span class="balance-value">$10,000</span>
+            <div style="display: flex; align-items: center;">
+                <div class="balance-container">
+                    <span class="balance-label">Balance:</span>
+                    <span class="balance-value">$10,000</span>
+                </div>
+                <div class="time-container" id="timeContainer">
+                    <span class="time-label">Time Left:</span>
+                    <span class="time-value" id="timeValue">00:00</span>
+                </div>
             </div>
         </header>
         
@@ -655,7 +699,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
             // =============================================
-            // STRICT One-Device-Per-Key Authentication
+            // STRICT One-Device-Per-Key Authentication with Minute-Based Expiration
             // =============================================
             const authOverlay = document.getElementById('authOverlay');
             const mainContent = document.getElementById('mainContent');
@@ -663,20 +707,52 @@
             const authSubmitBtn = document.getElementById('authSubmitBtn');
             const authError = document.getElementById('authError');
             const authSuccess = document.getElementById('authSuccess');
+            const timeRemaining = document.getElementById('timeRemaining');
+            const timeValue = document.getElementById('timeValue');
+            const timeContainer = document.getElementById('timeContainer');
             
-            // Predefined valid keys (10 keys)
-            const validKeys = [
-                "BAC-AI-2025-K1X7", 
-                "BAC-AI-2025-P9Y3",
-                "BAC-AI-2025-M2Z8",
-                "BAC-AI-2025-Q6W4",
-                "BAC-AI-2025-R5V9",
-                "BAC-AI-2025-S4U2",
-                "BAC-AI-2025-T3T1",
-                "BAC-AI-2025-U2S6",
-                "BAC-AI-2025-V1R5",
-                "BAC-AI-2025-W0Q4"
-            ];
+            // Predefined valid keys with expiration periods (in minutes)
+            const validKeys = {
+                "BAC-AI-2024-K1X7": { expiresIn: 1 },    // 60 minutes (1 hour)
+                "BAC-AI-2024-P9Y3": { expiresIn: 1440 },   // 1440 minutes (24 hours)
+                "BAC-AI-2024-M2Z8": { expiresIn: 30 },      // 30 minutes
+                "BAC-AI-2024-Q6W4": { expiresIn: 120 },     // 120 minutes (2 hours)
+                "BAC-AI-2024-R5V9": { expiresIn: 180 },     // 180 minutes (3 hours)
+                "BAC-AI-2024-S4U2": { expiresIn: 15 },      // 15 minutes
+                "BAC-AI-2024-T3T1": { expiresIn: 240 },     // 240 minutes (4 hours)
+                "BAC-AI-2024-U2S6": { expiresIn: 480 },     // 480 minutes (8 hours)
+                "BAC-AI-2024-V1R5": { expiresIn: 720 },     // 720 minutes (12 hours)
+                "BAC-AI-2024-W0Q4": { expiresIn: 1440 }     // 1440 minutes (24 hours)
+                "BAC-AI-2025-A2X6": { expiresIn: 480 },     // 480 minutes (8 hours)
+            };
+
+            // Check if a key is expired
+            function isKeyExpired(keyInfo) {
+                if (!keyInfo || !keyInfo.firstUsed) return true;
+                
+                const expirationDate = new Date(keyInfo.firstUsed);
+                expirationDate.setMinutes(expirationDate.getMinutes() + keyInfo.expiresIn);
+                
+                return new Date() > expirationDate;
+            }
+
+            // Format time as MM:SS
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            // Calculate remaining time in seconds
+            function getRemainingTime(keyInfo) {
+                if (!keyInfo || !keyInfo.firstUsed) return 0;
+                
+                const expirationDate = new Date(keyInfo.firstUsed);
+                expirationDate.setMinutes(expirationDate.getMinutes() + keyInfo.expiresIn);
+                const now = new Date();
+                
+                return Math.max(0, Math.floor((expirationDate - now) / 1000));
+            }
 
             // Enhanced device fingerprinting
             async function getDeviceFingerprint() {
@@ -692,7 +768,6 @@
                     navigator.maxTouchPoints || 'unknown'
                 ];
                 
-                // Canvas fingerprinting
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 ctx.textBaseline = 'top';
@@ -705,7 +780,6 @@
                 ctx.fillText('BaccaratAI', 4, 17);
                 const canvasData = canvas.toDataURL();
                 
-                // WebGL fingerprint
                 let webglData = 'unsupported';
                 try {
                     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
@@ -716,10 +790,7 @@
                     }
                 } catch (e) {}
                 
-                // Create combined fingerprint
                 const combined = components.join('|') + '|' + canvasData + '|' + webglData;
-                
-                // Hash the fingerprint using SHA-256
                 const msgBuffer = new TextEncoder().encode(combined);
                 const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
                 const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -728,11 +799,11 @@
                 return 'fp-' + hashHex;
             }
 
-            // Authentication handler
+            // Authentication handler with expiration check
             authSubmitBtn.addEventListener('click', async function() {
                 const enteredKey = authKeyInput.value.trim();
                 
-                if (!validKeys.includes(enteredKey)) {
+                if (!validKeys.hasOwnProperty(enteredKey)) {
                     authError.textContent = "Invalid access key";
                     authError.style.display = 'block';
                     authKeyInput.classList.add('animate__shakeX');
@@ -751,12 +822,23 @@
                     keyRegistry[enteredKey] = {
                         fingerprint: deviceFingerprint,
                         firstUsed: new Date().toISOString(),
-                        lastUsed: new Date().toISOString()
+                        lastUsed: new Date().toISOString(),
+                        expiresIn: validKeys[enteredKey].expiresIn
                     };
                     localStorage.setItem('baccaratKeyRegistry', JSON.stringify(keyRegistry));
                 } 
-                // Key is already registered to this device
+                // Key is already registered to this device - check expiration
                 else if (keyRegistry[enteredKey].fingerprint === deviceFingerprint) {
+                    if (isKeyExpired(keyRegistry[enteredKey])) {
+                        authError.textContent = "This key has expired. Please renew your subscription.";
+                        authError.style.display = 'block';
+                        authKeyInput.classList.add('animate__shakeX');
+                        setTimeout(() => {
+                            authKeyInput.classList.remove('animate__shakeX');
+                        }, 1000);
+                        return;
+                    }
+                    
                     keyRegistry[enteredKey].lastUsed = new Date().toISOString();
                     localStorage.setItem('baccaratKeyRegistry', JSON.stringify(keyRegistry));
                 }
@@ -775,7 +857,17 @@
                 localStorage.setItem('baccaratAuthKey', enteredKey);
                 localStorage.setItem('baccaratAuthFingerprint', deviceFingerprint);
                 
-                // Show success
+                // Show success and remaining time
+                const remainingTime = getRemainingTime(keyRegistry[enteredKey]);
+                const minutes = Math.floor(remainingTime / 60);
+                const hours = Math.floor(minutes / 60);
+                const displayTime = hours > 0 ? 
+                    `${hours} hour${hours !== 1 ? 's' : ''} ${minutes % 60} minute${minutes % 60 !== 1 ? 's' : ''}` : 
+                    `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+                
+                timeRemaining.textContent = `This key expires in ${displayTime}`;
+                timeRemaining.style.display = 'block';
+                
                 authError.style.display = 'none';
                 authSuccess.style.display = 'block';
                 this.disabled = true;
@@ -786,12 +878,12 @@
                     setTimeout(() => {
                         authOverlay.style.display = 'none';
                         mainContent.style.display = 'block';
-                        initApp();
+                        initApp(enteredKey);
                     }, 500);
                 }, 1500);
             });
             
-            // Check for existing auth on page load
+            // Check for existing auth on page load with expiration check
             async function checkExistingAuth() {
                 const savedKey = localStorage.getItem('baccaratAuthKey');
                 const savedFingerprint = localStorage.getItem('baccaratAuthFingerprint');
@@ -811,12 +903,24 @@
                 const keyInfo = keyRegistry[savedKey];
                 
                 if (keyInfo && keyInfo.fingerprint === currentFingerprint) {
+                    if (isKeyExpired(keyInfo)) {
+                        // Clear authentication and show expired message
+                        localStorage.removeItem('baccaratAuthKey');
+                        localStorage.removeItem('baccaratAuthFingerprint');
+                        
+                        authOverlay.style.display = 'flex';
+                        authError.textContent = "Your access key has expired. Please renew your subscription.";
+                        authError.style.display = 'block';
+                        authKeyInput.value = savedKey;
+                        return false;
+                    }
+                    
                     keyInfo.lastUsed = new Date().toISOString();
                     localStorage.setItem('baccaratKeyRegistry', JSON.stringify(keyRegistry));
                     
                     authOverlay.style.display = 'none';
                     mainContent.style.display = 'block';
-                    initApp();
+                    initApp(savedKey);
                     return true;
                 }
                 
@@ -826,14 +930,16 @@
             // =============================================
             // Baccarat Bot Functionality
             // =============================================
-            function initApp() {
+            function initApp(activeKey) {
                 // Game state
                 const gameState = {
                     history: [],
                     patterns: [],
                     balance: 10000,
                     currentPattern: null,
-                    chart: null
+                    chart: null,
+                    activeKey: activeKey,
+                    timer: null
                 };
                 
                 // DOM elements
@@ -854,8 +960,76 @@
                     tieBtn: document.getElementById('tieBtn'),
                     clearBtn: document.getElementById('clearBtn'),
                     historyList: document.getElementById('historyList'),
-                    balanceValue: document.querySelector('.balance-value')
+                    balanceValue: document.querySelector('.balance-value'),
+                    timeValue: document.getElementById('timeValue')
                 };
+                
+                // Start the countdown timer
+                function startTimer() {
+                    const keyRegistry = JSON.parse(localStorage.getItem('baccaratKeyRegistry') || '{}');
+                    const keyInfo = keyRegistry[gameState.activeKey];
+                    
+                    if (!keyInfo) return;
+                    
+                    // Clear any existing timer
+                    if (gameState.timer) {
+                        clearInterval(gameState.timer);
+                    }
+                    
+                    // Update immediately
+                    updateTimerDisplay();
+                    
+                    // Update every second
+                    gameState.timer = setInterval(() => {
+                        const remaining = updateTimerDisplay();
+                        
+                        if (remaining <= 0) {
+                            clearInterval(gameState.timer);
+                            handleKeyExpiration();
+                        }
+                    }, 1000);
+                }
+                
+                // Update the timer display and return remaining seconds
+                function updateTimerDisplay() {
+                    const keyRegistry = JSON.parse(localStorage.getItem('baccaratKeyRegistry') || '{}');
+                    const keyInfo = keyRegistry[gameState.activeKey];
+                    
+                    if (!keyInfo) return 0;
+                    
+                    const remaining = getRemainingTime(keyInfo);
+                    elements.timeValue.textContent = formatTime(remaining);
+                    
+                    // Change color when time is running low
+                    if (remaining <= 300) { // 5 minutes or less
+                        elements.timeValue.style.color = 'var(--danger)';
+                        timeContainer.classList.add('animate-glow');
+                    } else if (remaining <= 900) { // 15 minutes or less
+                        elements.timeValue.style.color = 'var(--warning)';
+                        timeContainer.classList.remove('animate-glow');
+                    } else {
+                        elements.timeValue.style.color = 'var(--info)';
+                        timeContainer.classList.remove('animate-glow');
+                    }
+                    
+                    return remaining;
+                }
+                
+                // Handle key expiration
+                function handleKeyExpiration() {
+                    // Clear authentication
+                    localStorage.removeItem('baccaratAuthKey');
+                    localStorage.removeItem('baccaratAuthFingerprint');
+                    
+                    // Show auth overlay with expiration message
+                    mainContent.style.display = 'none';
+                    authOverlay.style.display = 'flex';
+                    authOverlay.style.opacity = '1';
+                    authError.textContent = "Your access key has expired. Please renew your subscription.";
+                    authError.style.display = 'block';
+                    authKeyInput.value = gameState.activeKey;
+                    timeRemaining.style.display = 'none';
+                }
                 
                 // Enhanced Baccarat patterns database
                 const patternsDB = [
@@ -1322,6 +1496,7 @@
                 // Initialize the app
                 function init() {
                     initChart();
+                    startTimer();
                     
                     // Add some sample data
                     const sampleOutcomes = ['player', 'banker', 'banker', 'player', 'tie', 'banker', 'banker', 'banker', 'player'];
