@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baccarat AI Pattern Analyzer</title>
+    <title>Baccarat Score-Weighted Analyzer</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -19,21 +19,21 @@
             --warning: #fdcb6e;
             --info: #0984e3;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Poppins', sans-serif;
         }
-        
+
         body {
             background: linear-gradient(135deg, #1e1e2f, #2d2d44);
             color: var(--light);
             min-height: 100vh;
             overflow-x: hidden;
         }
-        
+
         /* Auth Overlay Styles */
         .auth-overlay {
             position: fixed;
@@ -48,7 +48,7 @@
             z-index: 1000;
             backdrop-filter: blur(10px);
         }
-        
+
         .auth-container {
             background: linear-gradient(135deg, #2d3436, #1e1e2f);
             padding: 2rem;
@@ -60,13 +60,13 @@
             text-align: center;
             animation: fadeInUp 0.6s ease-out;
         }
-        
+
         .auth-title {
             font-size: 1.8rem;
             margin-bottom: 1.5rem;
             color: var(--accent);
         }
-        
+
         .auth-input {
             width: 100%;
             padding: 1rem;
@@ -78,13 +78,13 @@
             font-size: 1rem;
             transition: all 0.3s ease;
         }
-        
+
         .auth-input:focus {
             outline: none;
             background: rgba(255, 255, 255, 0.2);
             box-shadow: 0 0 0 2px var(--primary);
         }
-        
+
         .auth-btn {
             background: var(--primary);
             color: white;
@@ -98,38 +98,38 @@
             width: 100%;
             margin-bottom: 1rem;
         }
-        
+
         .auth-btn:hover {
             background: var(--secondary);
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
         }
-        
+
         .auth-error {
             color: var(--danger);
             margin-top: 1rem;
             display: none;
         }
-        
+
         .auth-success {
             color: var(--success);
             margin-top: 1rem;
             display: none;
         }
-        
+
         .key-info {
             margin-top: 1.5rem;
             font-size: 0.9rem;
             opacity: 0.8;
         }
-        
+
         .time-remaining {
             margin-top: 1rem;
             color: var(--warning);
             font-weight: bold;
             display: none;
         }
-        
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -140,7 +140,7 @@
                 transform: translateY(0);
             }
         }
-        
+
         /* Main Content Styles */
         .container {
             max-width: 1200px;
@@ -148,7 +148,7 @@
             padding: 2rem;
             display: none;
         }
-        
+
         header {
             display: flex;
             justify-content: space-between;
@@ -157,7 +157,7 @@
             padding-bottom: 1rem;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        
+
         .logo {
             font-size: 1.8rem;
             font-weight: 700;
@@ -165,11 +165,11 @@
             display: flex;
             align-items: center;
         }
-        
+
         .logo span {
             color: var(--primary);
         }
-        
+
         .balance-container {
             background: rgba(0,0,0,0.3);
             padding: 0.5rem 1rem;
@@ -178,17 +178,17 @@
             align-items: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        
+
         .balance-label {
             margin-right: 0.5rem;
             opacity: 0.8;
         }
-        
+
         .balance-value {
             font-weight: 600;
             color: var(--warning);
         }
-        
+
         .time-container {
             background: rgba(0,0,0,0.3);
             padding: 0.5rem 1rem;
@@ -198,23 +198,23 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             margin-left: 1rem;
         }
-        
+
         .time-label {
             margin-right: 0.5rem;
             opacity: 0.8;
         }
-        
+
         .time-value {
             font-weight: 600;
             color: var(--info);
         }
-        
+
         .main-content {
             display: grid;
             grid-template-columns: 1fr 300px;
             gap: 2rem;
         }
-        
+
         .chart-container {
             background: rgba(255,255,255,0.05);
             border-radius: 15px;
@@ -225,23 +225,23 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .chart-header {
             display: flex;
             justify-content: space-between;
             margin-bottom: 1.5rem;
         }
-        
+
         .chart-title {
             font-size: 1.3rem;
             font-weight: 600;
         }
-        
+
         .chart-controls {
             display: flex;
             gap: 0.5rem;
         }
-        
+
         .control-btn {
             background: rgba(255,255,255,0.1);
             border: none;
@@ -252,28 +252,28 @@
             transition: all 0.3s ease;
             font-size: 0.9rem;
         }
-        
+
         .control-btn:hover {
             background: var(--primary);
             transform: translateY(-2px);
         }
-        
+
         .chart-area {
             height: 400px;
             position: relative;
             overflow: hidden;
         }
-        
+
         .roadmap {
             display: grid;
             grid-template-columns: repeat(20, 1fr);
             gap: 5px;
             margin-top: 1rem;
         }
-        
+
         .cell {
-            width: 25px;
-            height: 25px;
+            width: 30px; /* Slightly larger for score */
+            height: 30px; /* Slightly larger for score */
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -282,29 +282,30 @@
             position: relative;
             transition: all 0.3s ease;
             cursor: pointer;
+            font-size: 0.8rem; /* Adjust font size for score */
         }
-        
+
         .cell.player {
             background-color: var(--info);
             box-shadow: 0 0 15px rgba(0, 184, 148, 0.5);
         }
-        
+
         .cell.banker {
             background-color: var(--danger);
             box-shadow: 0 0 15px rgba(214, 48, 49, 0.5);
         }
-        
+
         .cell.tie {
             background-color: var(--warning);
             color: var(--dark);
             box-shadow: 0 0 15px rgba(253, 203, 110, 0.5);
         }
-        
+
         .cell:hover {
             transform: scale(1.2);
             z-index: 10;
         }
-        
+
         .analysis-panel {
             background: rgba(255,255,255,0.05);
             border-radius: 15px;
@@ -315,14 +316,44 @@
             display: flex;
             flex-direction: column;
         }
-        
+
         .panel-title {
             font-size: 1.3rem;
             font-weight: 600;
             margin-bottom: 1.5rem;
             text-align: center;
         }
-        
+
+        /* Message Box Styles */
+        .message-box {
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 500;
+            display: none; /* Hidden by default */
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .message-box.error {
+            background-color: rgba(214, 48, 49, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .message-box.success {
+            background-color: rgba(0, 184, 148, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .message-box.show {
+            display: block;
+            opacity: 1;
+        }
+
+
         .bet-recommendation {
             background: rgba(0,0,0,0.3);
             padding: 1rem;
@@ -335,97 +366,123 @@
             justify-content: center;
             transition: all 0.5s ease;
         }
-        
+
         .recommendation-text {
             font-size: 1.2rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
         }
-        
+
         .no-bet {
             color: var(--danger);
         }
-        
+
         .bet-suggestion {
             color: var(--success);
             animation: pulse 2s infinite;
         }
-        
+
         @keyframes pulse {
             0% { opacity: 0.8; }
             50% { opacity: 1; text-shadow: 0 0 10px var(--success); }
             100% { opacity: 0.8; }
         }
-        
+
         .bet-amount {
             font-size: 0.9rem;
             color: var(--warning);
         }
-        
-        .pattern-info {
+
+        .score-index-info {
             background: rgba(0,0,0,0.3);
             padding: 1rem;
             border-radius: 10px;
             margin-bottom: 1.5rem;
         }
-        
-        .pattern-title {
+
+        .score-index-title {
             font-size: 1rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
             color: var(--accent);
         }
-        
-        .pattern-desc {
+
+        .score-index-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-index-desc {
             font-size: 0.9rem;
             opacity: 0.9;
             line-height: 1.5;
         }
-        
+
         .stats-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
-        
+
         .stat-box {
             background: rgba(0,0,0,0.3);
             padding: 1rem;
             border-radius: 10px;
             text-align: center;
         }
-        
+
         .stat-value {
             font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 0.3rem;
         }
-        
+
         .stat-label {
             font-size: 0.8rem;
             opacity: 0.7;
         }
-        
+
         .player-stat {
             color: var(--info);
         }
-        
+
         .banker-stat {
             color: var(--danger);
         }
-        
+
         .tie-stat {
             color: var(--warning);
         }
-        
+
         .action-btns {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
-        
+
+        .score-input {
+            grid-column: span 2; /* Span across both columns */
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 0.5rem; /* Space between input and buttons */
+            transition: all 0.3s ease;
+        }
+
+        .score-input:focus {
+            outline: none;
+            background: rgba(255,255,255,0.2);
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
         .btn {
             padding: 0.8rem;
             border-radius: 10px;
@@ -438,28 +495,28 @@
             justify-content: center;
             gap: 0.5rem;
         }
-        
+
         .btn-primary {
             background: var(--primary);
             color: white;
         }
-        
+
         .btn-primary:hover {
             background: var(--secondary);
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
         }
-        
+
         .btn-secondary {
             background: rgba(255,255,255,0.1);
             color: white;
         }
-        
+
         .btn-secondary:hover {
             background: rgba(255,255,255,0.2);
             transform: translateY(-3px);
         }
-        
+
         .btn-calculate {
             background: var(--success);
             color: white;
@@ -468,42 +525,42 @@
             font-size: 1.1rem;
             margin-bottom: 1.5rem;
         }
-        
+
         .btn-calculate:hover {
             background: #00a884;
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0, 184, 148, 0.4);
         }
-        
+
         .history-container {
             margin-top: auto;
         }
-        
+
         .history-title {
             font-size: 1rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
         }
-        
+
         .history-list {
             max-height: 150px;
             overflow-y: auto;
             padding-right: 0.5rem;
         }
-        
+
         .history-list::-webkit-scrollbar {
             width: 5px;
         }
-        
+
         .history-list::-webkit-scrollbar-track {
             background: rgba(255,255,255,0.1);
         }
-        
+
         .history-list::-webkit-scrollbar-thumb {
             background: var(--primary);
             border-radius: 10px;
         }
-        
+
         .history-item {
             display: flex;
             justify-content: space-between;
@@ -511,68 +568,68 @@
             border-bottom: 1px solid rgba(255,255,255,0.1);
             font-size: 0.9rem;
         }
-        
+
         .history-item:last-child {
             border-bottom: none;
         }
-        
+
         .history-outcome.player {
             color: var(--info);
         }
-        
+
         .history-outcome.banker {
             color: var(--danger);
         }
-        
+
         .history-outcome.tie {
             color: var(--warning);
         }
-        
+
         /* Animations */
         .animate-pop {
             animation: pop 0.4s ease-out;
         }
-        
+
         @keyframes pop {
             0% { transform: scale(0.8); opacity: 0; }
             70% { transform: scale(1.1); opacity: 1; }
             100% { transform: scale(1); }
         }
-        
+
         .animate-fade-in {
             animation: fadeIn 0.6s ease-out;
         }
-        
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
+
         .animate-glow {
             animation: glow 2s infinite alternate;
         }
-        
+
         @keyframes glow {
             from { box-shadow: 0 0 5px rgba(255,255,255,0.5); }
             to { box-shadow: 0 0 20px rgba(255,255,255,0.8); }
         }
-        
+
         /* Responsive */
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
             }
-            
+
             header {
                 flex-direction: column;
                 gap: 1rem;
                 align-items: flex-start;
             }
-            
+
             .balance-container, .time-container {
                 margin-left: 0;
             }
-            
+
             .roadmap {
                 grid-template-columns: repeat(10, 1fr);
             }
@@ -580,7 +637,6 @@
     </style>
 </head>
 <body>
-    <!-- Authentication Overlay -->
     <div class="auth-overlay" id="authOverlay">
         <div class="auth-container">
             <h1 class="auth-title">Baccarat AI Access</h1>
@@ -595,8 +651,7 @@
             </div>
         </div>
     </div>
-    
-    <!-- Main Content (hidden until authenticated) -->
+
     <div class="container" id="mainContent">
         <header>
             <div class="logo">
@@ -613,7 +668,7 @@
                 </div>
             </div>
         </header>
-        
+
         <div class="main-content">
             <div class="chart-container">
                 <div class="chart-header">
@@ -624,29 +679,29 @@
                         <button class="control-btn">Derivative</button>
                     </div>
                 </div>
-                
+
                 <div class="chart-area" id="chartArea">
-                    <!-- Chart will be rendered here -->
-                </div>
-                
+                    </div>
+
                 <div class="roadmap" id="roadmap">
-                    <!-- Roadmap cells will be generated by JS -->
-                </div>
+                    </div>
             </div>
-            
+
             <div class="analysis-panel">
-                <h2 class="panel-title">Pattern Analysis</h2>
-                
+                <h2 class="panel-title">Score Analysis</h2>
+
+                <div id="messageBox" class="message-box"></div>
+
                 <div class="bet-recommendation" id="betRecommendation">
                     <div class="recommendation-text no-bet">No recommended bet</div>
                     <div class="bet-amount" id="betAmount"></div>
                 </div>
-                
-                <div class="pattern-info">
-                    <div class="pattern-title">Current Pattern: <span id="currentPattern">None detected</span></div>
-                    <div class="pattern-desc" id="patternDesc">Waiting for analysis...</div>
+
+                <div class="score-index-info">
+                    <div class="score-index-title">Score Advantage Index: <span id="scoreAdvantageIndexValue">0.0</span></div>
+                    <div class="score-index-desc" id="scoreIndexDesc">A positive index suggests Banker advantage, negative suggests Player.</div>
                 </div>
-                
+
                 <div class="stats-container">
                     <div class="stat-box player-stat">
                         <div class="stat-value" id="playerWins">0</div>
@@ -661,16 +716,25 @@
                         <div class="stat-label">Tie Games</div>
                     </div>
                     <div class="stat-box">
+                        <div class="stat-value" id="avgPlayerScore">0.0</div>
+                        <div class="stat-label">Avg Player Score</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="avgBankerScore">0.0</div>
+                        <div class="stat-label">Avg Banker Score</div>
+                    </div>
+                    <div class="stat-box">
                         <div class="stat-value" id="winRate">0%</div>
                         <div class="stat-label">Win Rate</div>
                     </div>
                 </div>
-                
+
                 <button class="btn btn-calculate" id="calculateBtn">
-                    <i class="fas fa-calculator"></i> Calculate Pattern
+                    <i class="fas fa-calculator"></i> Analyze Scores
                 </button>
-                
+
                 <div class="action-btns">
+                    <input type="number" id="scoreInput" min="0" max="9" placeholder="Score (0-9)" class="score-input">
                     <button class="btn btn-primary" id="playerBtn">
                         <i class="fas fa-user"></i> Player
                     </button>
@@ -684,17 +748,16 @@
                         <i class="fas fa-trash"></i> Clear
                     </button>
                 </div>
-                
+
                 <div class="history-container">
                     <div class="history-title">Recent Results</div>
                     <div class="history-list" id="historyList">
-                        <!-- History items will be added here -->
-                    </div>
+                        </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
@@ -710,10 +773,10 @@
             const timeRemaining = document.getElementById('timeRemaining');
             const timeValue = document.getElementById('timeValue');
             const timeContainer = document.getElementById('timeContainer');
-            
+
             // Predefined valid keys with expiration periods (in minutes)
             const validKeys = {
-                "BAC-AI-2024-K1372": { expiresIn: 601111 },    // 60 minutes (1 hour)
+                "BAC-AI-2024-K1X7": { expiresIn: 1 },    // 60 minutes (1 hour)
                 "BAC-AI-2024-P9Y3": { expiresIn: 1440 },   // 1440 minutes (24 hours)
                 "BAC-AI-2024-M2Z8": { expiresIn: 30 },      // 30 minutes
                 "BAC-AI-2024-Q6W4": { expiresIn: 120 },     // 120 minutes (2 hours)
@@ -722,16 +785,17 @@
                 "BAC-AI-2024-T3T1": { expiresIn: 240 },     // 240 minutes (4 hours)
                 "BAC-AI-2024-U2S6": { expiresIn: 480 },     // 480 minutes (8 hours)
                 "BAC-AI-2024-V1R5": { expiresIn: 720 },     // 720 minutes (12 hours)
-                "BAC-AI-GOATED-GG-12ZXUA": { expiresIn: 43800 }     // 1440 minutes (24 hours)
+                "BAC-AI-2024-W0Q4": { expiresIn: 1440 },    // 1440 minutes (24 hours)
+                "BAC-AI-2025-A2X6": { expiresIn: 480 },     // 480 minutes (8 hours)
             };
 
             // Check if a key is expired
             function isKeyExpired(keyInfo) {
                 if (!keyInfo || !keyInfo.firstUsed) return true;
-                
+
                 const expirationDate = new Date(keyInfo.firstUsed);
                 expirationDate.setMinutes(expirationDate.getMinutes() + keyInfo.expiresIn);
-                
+
                 return new Date() > expirationDate;
             }
 
@@ -745,11 +809,11 @@
             // Calculate remaining time in seconds
             function getRemainingTime(keyInfo) {
                 if (!keyInfo || !keyInfo.firstUsed) return 0;
-                
+
                 const expirationDate = new Date(keyInfo.firstUsed);
                 expirationDate.setMinutes(expirationDate.getMinutes() + keyInfo.expiresIn);
                 const now = new Date();
-                
+
                 return Math.max(0, Math.floor((expirationDate - now) / 1000));
             }
 
@@ -766,7 +830,7 @@
                     !!navigator.pdfViewerEnabled,
                     navigator.maxTouchPoints || 'unknown'
                 ];
-                
+
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 ctx.textBaseline = 'top';
@@ -778,30 +842,30 @@
                 ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
                 ctx.fillText('BaccaratAI', 4, 17);
                 const canvasData = canvas.toDataURL();
-                
+
                 let webglData = 'unsupported';
                 try {
                     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
                     if (gl) {
                         const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                        webglData = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) + '|' + 
+                        webglData = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) + '|' +
                                    gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
                     }
                 } catch (e) {}
-                
+
                 const combined = components.join('|') + '|' + canvasData + '|' + webglData;
                 const msgBuffer = new TextEncoder().encode(combined);
                 const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
                 const hashArray = Array.from(new Uint8Array(hashBuffer));
                 const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-                
+
                 return 'fp-' + hashHex;
             }
 
             // Authentication handler with expiration check
             authSubmitBtn.addEventListener('click', async function() {
                 const enteredKey = authKeyInput.value.trim();
-                
+
                 if (!validKeys.hasOwnProperty(enteredKey)) {
                     authError.textContent = "Invalid access key";
                     authError.style.display = 'block';
@@ -811,11 +875,11 @@
                     }, 1000);
                     return;
                 }
-                
+
                 // Get or create key registry
                 let keyRegistry = JSON.parse(localStorage.getItem('baccaratKeyRegistry') || '{}');
                 const deviceFingerprint = await getDeviceFingerprint();
-                
+
                 // Key is being used for the first time
                 if (!keyRegistry[enteredKey]) {
                     keyRegistry[enteredKey] = {
@@ -825,7 +889,7 @@
                         expiresIn: validKeys[enteredKey].expiresIn
                     };
                     localStorage.setItem('baccaratKeyRegistry', JSON.stringify(keyRegistry));
-                } 
+                }
                 // Key is already registered to this device - check expiration
                 else if (keyRegistry[enteredKey].fingerprint === deviceFingerprint) {
                     if (isKeyExpired(keyRegistry[enteredKey])) {
@@ -837,7 +901,7 @@
                         }, 1000);
                         return;
                     }
-                    
+
                     keyRegistry[enteredKey].lastUsed = new Date().toISOString();
                     localStorage.setItem('baccaratKeyRegistry', JSON.stringify(keyRegistry));
                 }
@@ -851,26 +915,26 @@
                     }, 1000);
                     return;
                 }
-                
+
                 // Store successful authentication
                 localStorage.setItem('baccaratAuthKey', enteredKey);
                 localStorage.setItem('baccaratAuthFingerprint', deviceFingerprint);
-                
+
                 // Show success and remaining time
                 const remainingTime = getRemainingTime(keyRegistry[enteredKey]);
                 const minutes = Math.floor(remainingTime / 60);
                 const hours = Math.floor(minutes / 60);
-                const displayTime = hours > 0 ? 
-                    `${hours} hour${hours !== 1 ? 's' : ''} ${minutes % 60} minute${minutes % 60 !== 1 ? 's' : ''}` : 
+                const displayTime = hours > 0 ?
+                    `${hours} hour${hours !== 1 ? 's' : ''} ${minutes % 60} minute${minutes % 60 !== 1 ? 's' : ''}` :
                     `${minutes} minute${minutes !== 1 ? 's' : ''}`;
-                
+
                 timeRemaining.textContent = `This key expires in ${displayTime}`;
                 timeRemaining.style.display = 'block';
-                
+
                 authError.style.display = 'none';
                 authSuccess.style.display = 'block';
                 this.disabled = true;
-                
+
                 // Transition to main content
                 setTimeout(() => {
                     authOverlay.style.opacity = '0';
@@ -881,78 +945,79 @@
                     }, 500);
                 }, 1500);
             });
-            
+
             // Check for existing auth on page load with expiration check
             async function checkExistingAuth() {
                 const savedKey = localStorage.getItem('baccaratAuthKey');
                 const savedFingerprint = localStorage.getItem('baccaratAuthFingerprint');
-                
+
                 if (!savedKey || !savedFingerprint) {
                     return false;
                 }
-                
+
                 const currentFingerprint = await getDeviceFingerprint();
                 if (savedFingerprint !== currentFingerprint) {
                     localStorage.removeItem('baccaratAuthKey');
                     localStorage.removeItem('baccaratAuthFingerprint');
                     return false;
                 }
-                
+
                 const keyRegistry = JSON.parse(localStorage.getItem('baccaratKeyRegistry') || '{}');
                 const keyInfo = keyRegistry[savedKey];
-                
+
                 if (keyInfo && keyInfo.fingerprint === currentFingerprint) {
                     if (isKeyExpired(keyInfo)) {
                         // Clear authentication and show expired message
                         localStorage.removeItem('baccaratAuthKey');
                         localStorage.removeItem('baccaratAuthFingerprint');
-                        
+
                         authOverlay.style.display = 'flex';
                         authError.textContent = "Your access key has expired. Please renew your subscription.";
                         authError.style.display = 'block';
                         authKeyInput.value = savedKey;
                         return false;
                     }
-                    
+
                     keyInfo.lastUsed = new Date().toISOString();
                     localStorage.setItem('baccaratKeyRegistry', JSON.stringify(keyRegistry));
-                    
+
                     authOverlay.style.display = 'none';
                     mainContent.style.display = 'block';
                     initApp(savedKey);
                     return true;
                 }
-                
+
                 return false;
             }
-            
+
             // =============================================
-            // Baccarat Bot Functionality
+            // Baccarat Score-Weighted Analyzer Functionality
             // =============================================
             function initApp(activeKey) {
                 // Game state
                 const gameState = {
-                    history: [],
-                    patterns: [],
+                    // History now stores objects with winner and score
+                    history: [], // e.g., [{ winner: 'player', score: 8 }, { winner: 'banker', score: 6 }, { winner: 'tie', score: null }]
                     balance: 10000,
-                    currentPattern: null,
                     chart: null,
                     activeKey: activeKey,
                     timer: null
                 };
-                
+
                 // DOM elements
                 const elements = {
                     roadmap: document.getElementById('roadmap'),
                     chartArea: document.getElementById('chartArea'),
                     betRecommendation: document.getElementById('betRecommendation'),
                     betAmount: document.getElementById('betAmount'),
-                    currentPattern: document.getElementById('currentPattern'),
-                    patternDesc: document.getElementById('patternDesc'),
+                    scoreAdvantageIndexValue: document.getElementById('scoreAdvantageIndexValue'),
+                    scoreIndexDesc: document.getElementById('scoreIndexDesc'),
                     playerWins: document.getElementById('playerWins'),
                     bankerWins: document.getElementById('bankerWins'),
                     tieWins: document.getElementById('tieWins'),
                     winRate: document.getElementById('winRate'),
+                    avgPlayerScore: document.getElementById('avgPlayerScore'),
+                    avgBankerScore: document.getElementById('avgBankerScore'),
                     calculateBtn: document.getElementById('calculateBtn'),
                     playerBtn: document.getElementById('playerBtn'),
                     bankerBtn: document.getElementById('bankerBtn'),
@@ -960,45 +1025,63 @@
                     clearBtn: document.getElementById('clearBtn'),
                     historyList: document.getElementById('historyList'),
                     balanceValue: document.querySelector('.balance-value'),
-                    timeValue: document.getElementById('timeValue')
+                    timeValue: document.getElementById('timeValue'),
+                    scoreInput: document.getElementById('scoreInput'),
+                    messageBox: document.getElementById('messageBox') // Get the message box element
                 };
-                
+
+                /**
+                 * Displays a temporary message in the message box.
+                 * @param {string} message The message to display.
+                 * @param {'success'|'error'} type The type of message (determines styling).
+                 */
+                function displayMessage(message, type) {
+                    elements.messageBox.textContent = message;
+                    elements.messageBox.className = `message-box show ${type}`; // Add 'show' class to display
+
+                    // Hide the message after 3 seconds
+                    setTimeout(() => {
+                        elements.messageBox.classList.remove('show');
+                        elements.messageBox.textContent = ''; // Clear text
+                    }, 3000);
+                }
+
                 // Start the countdown timer
                 function startTimer() {
                     const keyRegistry = JSON.parse(localStorage.getItem('baccaratKeyRegistry') || '{}');
                     const keyInfo = keyRegistry[gameState.activeKey];
-                    
+
                     if (!keyInfo) return;
-                    
+
                     // Clear any existing timer
                     if (gameState.timer) {
                         clearInterval(gameState.timer);
                     }
-                    
+
                     // Update immediately
                     updateTimerDisplay();
-                    
+
                     // Update every second
                     gameState.timer = setInterval(() => {
                         const remaining = updateTimerDisplay();
-                        
+
                         if (remaining <= 0) {
                             clearInterval(gameState.timer);
                             handleKeyExpiration();
                         }
                     }, 1000);
                 }
-                
+
                 // Update the timer display and return remaining seconds
                 function updateTimerDisplay() {
                     const keyRegistry = JSON.parse(localStorage.getItem('baccaratKeyRegistry') || '{}');
                     const keyInfo = keyRegistry[gameState.activeKey];
-                    
+
                     if (!keyInfo) return 0;
-                    
+
                     const remaining = getRemainingTime(keyInfo);
                     elements.timeValue.textContent = formatTime(remaining);
-                    
+
                     // Change color when time is running low
                     if (remaining <= 300) { // 5 minutes or less
                         elements.timeValue.style.color = 'var(--danger)';
@@ -1010,16 +1093,16 @@
                         elements.timeValue.style.color = 'var(--info)';
                         timeContainer.classList.remove('animate-glow');
                     }
-                    
+
                     return remaining;
                 }
-                
+
                 // Handle key expiration
                 function handleKeyExpiration() {
                     // Clear authentication
                     localStorage.removeItem('baccaratAuthKey');
                     localStorage.removeItem('baccaratAuthFingerprint');
-                    
+
                     // Show auth overlay with expiration message
                     mainContent.style.display = 'none';
                     authOverlay.style.display = 'flex';
@@ -1029,175 +1112,49 @@
                     authKeyInput.value = gameState.activeKey;
                     timeRemaining.style.display = 'none';
                 }
-                
-                // Enhanced Baccarat patterns database
-                const patternsDB = [
-                    // Streak patterns
-                    {
-                        name: "Dragon Tail (Banker Streak)",
-                        description: "After 4+ consecutive Banker wins, 72% chance next will be Player",
-                        condition: (history) => {
-                            if (history.length < 4) return false;
-                            const lastFour = history.slice(-4);
-                            return lastFour.every(outcome => outcome === 'banker');
-                        },
-                        suggestion: "player",
-                        confidence: 0.72
+
+                // Define score influence values for the Score Advantage Index
+                // Positive values lean towards Banker, negative towards Player.
+                // This is a heuristic, not a traditional card counting system.
+                const scoreInfluence = {
+                    banker: {
+                        9: 3, 8: 2, 7: 1, 6: 0.5, 5: -0.5, 4: -1, 3: -1.5, 2: -2, 1: -2.5, 0: -3
                     },
-                    {
-                        name: "Phoenix Rise (Player Streak)",
-                        description: "After 4+ consecutive Player wins, 70% chance next will be Banker",
-                        condition: (history) => {
-                            if (history.length < 4) return false;
-                            const lastFour = history.slice(-4);
-                            return lastFour.every(outcome => outcome === 'player');
-                        },
-                        suggestion: "banker",
-                        confidence: 0.70
+                    player: {
+                        9: -3, 8: -2, 7: -1, 6: -0.5, 5: 0.5, 4: 1, 3: 1.5, 2: 2, 1: 2.5, 0: 3
                     },
-                    
-                    // Alternation patterns
-                    {
-                        name: "Big Eye Boy (Alternation)",
-                        description: "Alternating between Player and Banker 4+ times suggests 68% chance of continuation",
-                        condition: (history) => {
-                            if (history.length < 6) return false;
-                            const lastSix = history.slice(-6);
-                            for (let i = 0; i < 5; i++) {
-                                if (lastSix[i] === lastSix[i+1]) return false;
-                            }
-                            return true;
-                        },
-                        suggestion: lastOutcome => lastOutcome === 'player' ? 'banker' : 'player',
-                        confidence: 0.68
-                    },
-                    
-                    // Chop patterns
-                    {
-                        name: "Chop Zone (PBPB or BPBP)",
-                        description: "Repeating Player-Banker or Banker-Player pattern suggests 67% continuation",
-                        condition: (history) => {
-                            if (history.length < 4) return false;
-                            const lastFour = history.slice(-4);
-                            const pattern1 = lastFour[0] === 'player' && lastFour[1] === 'banker' && 
-                                           lastFour[2] === 'player' && lastFour[3] === 'banker';
-                            const pattern2 = lastFour[0] === 'banker' && lastFour[1] === 'player' && 
-                                           lastFour[2] === 'banker' && lastFour[3] === 'player';
-                            return pattern1 || pattern2;
-                        },
-                        suggestion: history => history[history.length - 1] === 'player' ? 'banker' : 'player',
-                        confidence: 0.67
-                    },
-                    
-                    // Tie patterns
-                    {
-                        name: "Tie Breaker",
-                        description: "After a tie, 63% chance next outcome matches pre-tie outcome",
-                        condition: (history) => {
-                            if (history.length < 2) return false;
-                            return history[history.length - 2] === 'tie';
-                        },
-                        suggestion: history => history[history.length - 3],
-                        confidence: 0.63
-                    },
-                    {
-                        name: "Double Tie",
-                        description: "After two consecutive ties, 75% chance next will be Banker",
-                        condition: (history) => {
-                            if (history.length < 2) return false;
-                            return history[history.length - 1] === 'tie' && history[history.length - 2] === 'tie';
-                        },
-                        suggestion: "banker",
-                        confidence: 0.75
-                    },
-                    
-                    // Reversal patterns
-                    {
-                        name: "3-2 Reversal",
-                        description: "3 consecutive same outcomes followed by 2 opposite suggests 65% chance of returning to original",
-                        condition: (history) => {
-                            if (history.length < 5) return false;
-                            const lastFive = history.slice(-5);
-                            const firstThreeSame = lastFive[0] === lastFive[1] && lastFive[1] === lastFive[2];
-                            const nextTwoSame = lastFive[3] === lastFive[4];
-                            const opposite = lastFive[2] !== lastFive[3];
-                            return firstThreeSame && nextTwoSame && opposite;
-                        },
-                        suggestion: history => history[history.length - 5],
-                        confidence: 0.65
-                    },
-                    
-                    // Pair patterns
-                    {
-                        name: "Banker Pairs",
-                        description: "After 2 Banker wins, 60% chance of Player next",
-                        condition: (history) => {
-                            if (history.length < 2) return false;
-                            const lastTwo = history.slice(-2);
-                            return lastTwo[0] === 'banker' && lastTwo[1] === 'banker';
-                        },
-                        suggestion: "player",
-                        confidence: 0.60
-                    },
-                    {
-                        name: "Player Pairs",
-                        description: "After 2 Player wins, 58% chance of Banker next",
-                        condition: (history) => {
-                            if (history.length < 2) return false;
-                            const lastTwo = history.slice(-2);
-                            return lastTwo[0] === 'player' && lastTwo[1] === 'player';
-                        },
-                        suggestion: "banker",
-                        confidence: 0.58
-                    },
-                    
-                    // Complex patterns
-                    {
-                        name: "Zig Zag (3-Pattern)",
-                        description: "P-B-P or B-P-B pattern suggests 66% chance of completing the sequence",
-                        condition: (history) => {
-                            if (history.length < 3) return false;
-                            const lastThree = history.slice(-3);
-                            const pattern1 = lastThree[0] === 'player' && lastThree[1] === 'banker' && lastThree[2] === 'player';
-                            const pattern2 = lastThree[0] === 'banker' && lastThree[1] === 'player' && lastThree[2] === 'banker';
-                            return pattern1 || pattern2;
-                        },
-                        suggestion: history => history[history.length - 3],
-                        confidence: 0.66
-                    },
-                    {
-                        name: "Dragon Pattern",
-                        description: "4+ alternating with one repeat suggests 69% chance of continuing alternation",
-                        condition: (history) => {
-                            if (history.length < 6) return false;
-                            const lastSix = history.slice(-6);
-                            let alternations = 0;
-                            let repeats = 0;
-                            
-                            for (let i = 0; i < 5; i++) {
-                                if (lastSix[i] !== lastSix[i+1]) alternations++;
-                                else repeats++;
-                            }
-                            
-                            return alternations >= 4 && repeats === 1;
-                        },
-                        suggestion: lastOutcome => lastOutcome === 'player' ? 'banker' : 'player',
-                        confidence: 0.69
-                    }
-                ];
-                
+                    tie: 0 // Ties have no direct influence on Banker/Player advantage
+                };
+
+                /**
+                 * Calculates the current Score Advantage Index based on the game history.
+                 * A positive index suggests Banker advantage, negative suggests Player advantage.
+                 * @returns {number} The current Score Advantage Index.
+                 */
+                function calculateScoreAdvantageIndex() {
+                    let index = 0;
+                    gameState.history.forEach(outcome => {
+                        if (outcome.winner === 'tie') {
+                            index += scoreInfluence.tie;
+                        } else if (outcome.score !== null && scoreInfluence[outcome.winner] && scoreInfluence[outcome.winner][outcome.score] !== undefined) {
+                            index += scoreInfluence[outcome.winner][outcome.score];
+                        }
+                    });
+                    return parseFloat(index.toFixed(1)); // Keep one decimal place
+                }
+
                 // Initialize chart
                 function initChart() {
                     const ctx = document.createElement('canvas');
                     elements.chartArea.appendChild(ctx);
-                    
+
                     gameState.chart = new Chart(ctx, {
                         type: 'line',
                         data: {
                             labels: [],
                             datasets: [
                                 {
-                                    label: 'Player',
+                                    label: 'Player Wins',
                                     data: [],
                                     borderColor: '#00cec9',
                                     backgroundColor: 'rgba(0, 206, 201, 0.1)',
@@ -1205,7 +1162,7 @@
                                     borderWidth: 2
                                 },
                                 {
-                                    label: 'Banker',
+                                    label: 'Banker Wins',
                                     data: [],
                                     borderColor: '#d63031',
                                     backgroundColor: 'rgba(214, 48, 49, 0.1)',
@@ -1253,193 +1210,194 @@
                         }
                     });
                 }
-                
+
                 // Update chart with new data
                 function updateChart() {
                     const labels = [];
                     const playerData = [];
                     const bankerData = [];
-                    
+
                     gameState.history.forEach((outcome, index) => {
-                        labels.push(`Round ${index + 1}`);
-                        playerData.push(outcome === 'player' ? 1 : 0);
-                        bankerData.push(outcome === 'banker' ? 1 : 0);
+                        labels.push(`R ${index + 1}`);
+                        playerData.push(outcome.winner === 'player' ? 1 : 0);
+                        bankerData.push(outcome.winner === 'banker' ? 1 : 0);
                     });
-                    
+
                     gameState.chart.data.labels = labels;
                     gameState.chart.data.datasets[0].data = playerData;
                     gameState.chart.data.datasets[1].data = bankerData;
                     gameState.chart.update();
                 }
-                
-                // Generate roadmap cells
+
+                // Generate roadmap cells with scores
                 function updateRoadmap() {
                     elements.roadmap.innerHTML = '';
-                    
+
                     gameState.history.forEach((outcome, index) => {
                         const cell = document.createElement('div');
-                        cell.className = `cell ${outcome}`;
-                        cell.textContent = outcome === 'tie' ? 'T' : outcome.charAt(0).toUpperCase();
+                        cell.className = `cell ${outcome.winner}`;
+                        // Display score if available, otherwise just the initial letter
+                        cell.textContent = outcome.winner === 'tie' ? 'T' : `${outcome.winner.charAt(0).toUpperCase()}(${outcome.score})`;
                         cell.style.animationDelay = `${index * 0.1}s`;
                         cell.classList.add('animate-pop');
-                        
-                        // Add tooltip with round number
-                        cell.title = `Round ${index + 1}: ${outcome}`;
-                        
+
+                        // Add tooltip with round number and full outcome
+                        cell.title = `Round ${index + 1}: ${outcome.winner.charAt(0).toUpperCase() + outcome.winner.slice(1)} ${outcome.score !== null ? 'with ' + outcome.score : ''}`;
+
                         elements.roadmap.appendChild(cell);
-                        
+
                         // Remove animation class after animation completes
                         setTimeout(() => {
                             cell.classList.remove('animate-pop');
                         }, 400);
                     });
                 }
-                
-                // Update statistics
+
+                // Update statistics including average scores
                 function updateStats() {
-                    const playerWins = gameState.history.filter(outcome => outcome === 'player').length;
-                    const bankerWins = gameState.history.filter(outcome => outcome === 'banker').length;
-                    const tieWins = gameState.history.filter(outcome => outcome === 'tie').length;
+                    const playerWins = gameState.history.filter(outcome => outcome.winner === 'player');
+                    const bankerWins = gameState.history.filter(outcome => outcome.winner === 'banker');
+                    const tieWins = gameState.history.filter(outcome => outcome.winner === 'tie').length;
                     const total = gameState.history.length;
-                    
-                    elements.playerWins.textContent = playerWins;
-                    elements.bankerWins.textContent = bankerWins;
+
+                    elements.playerWins.textContent = playerWins.length;
+                    elements.bankerWins.textContent = bankerWins.length;
                     elements.tieWins.textContent = tieWins;
-                    
+
+                    // Calculate average player score
+                    const totalPlayerScore = playerWins.reduce((sum, outcome) => sum + (outcome.score || 0), 0);
+                    const avgPlayerScore = playerWins.length > 0 ? (totalPlayerScore / playerWins.length).toFixed(1) : '0.0';
+                    elements.avgPlayerScore.textContent = avgPlayerScore;
+
+                    // Calculate average banker score
+                    const totalBankerScore = bankerWins.reduce((sum, outcome) => sum + (outcome.score || 0), 0);
+                    const avgBankerScore = bankerWins.length > 0 ? (totalBankerScore / bankerWins.length).toFixed(1) : '0.0';
+                    elements.avgBankerScore.textContent = avgBankerScore;
+
+
                     if (total > 0) {
-                        const winRate = ((playerWins + bankerWins) / total * 100).toFixed(1);
+                        const winRate = ((playerWins.length + bankerWins.length) / total * 100).toFixed(1);
                         elements.winRate.textContent = `${winRate}%`;
                     } else {
                         elements.winRate.textContent = '0%';
                     }
                 }
-                
-                // Update history list
+
+                // Update history list with scores
                 function updateHistory() {
                     elements.historyList.innerHTML = '';
-                    
+
                     gameState.history.slice().reverse().forEach((outcome, index) => {
                         const item = document.createElement('div');
                         item.className = 'history-item';
-                        
+
                         const round = document.createElement('span');
                         round.textContent = `Round ${gameState.history.length - index}`;
-                        
+
                         const result = document.createElement('span');
-                        result.className = `history-outcome ${outcome}`;
-                        result.textContent = outcome.charAt(0).toUpperCase() + outcome.slice(1);
-                        
+                        result.className = `history-outcome ${outcome.winner}`;
+                        let outcomeText = outcome.winner.charAt(0).toUpperCase() + outcome.winner.slice(1);
+                        if (outcome.score !== null) {
+                            outcomeText += ` (${outcome.score})`;
+                        }
+                        result.textContent = outcomeText;
+
                         item.appendChild(round);
                         item.appendChild(result);
                         elements.historyList.appendChild(item);
                     });
                 }
-                
-                // Analyze patterns
-                function analyzePatterns() {
-                    gameState.patterns = [];
-                    
-                    if (gameState.history.length < 2) {
-                        return null;
-                    }
-                    
-                    // Check all patterns in the database
-                    patternsDB.forEach(pattern => {
-                        if (pattern.condition(gameState.history)) {
-                            gameState.patterns.push(pattern);
-                        }
-                    });
-                    
-                    // Sort patterns by confidence (highest first)
-                    gameState.patterns.sort((a, b) => b.confidence - a.confidence);
-                    
-                    return gameState.patterns.length > 0 ? gameState.patterns[0] : null;
-                }
-                
-                // Update recommendation based on analysis
+
+                // Update recommendation based on Score Advantage Index
                 function updateRecommendation() {
-                    const pattern = analyzePatterns();
+                    const scoreIndex = calculateScoreAdvantageIndex();
+                    elements.scoreAdvantageIndexValue.textContent = scoreIndex.toFixed(1);
+
                     const recommendation = elements.betRecommendation.querySelector('.recommendation-text');
                     const betAmount = elements.betAmount;
-                    
-                    if (!pattern) {
-                        recommendation.textContent = "No recommended bet";
-                        recommendation.className = "recommendation-text no-bet";
-                        betAmount.textContent = "";
-                        elements.currentPattern.textContent = "None detected";
-                        elements.patternDesc.textContent = "No significant patterns detected in recent history";
-                        return;
-                    }
-                    
-                    gameState.currentPattern = pattern;
-                    elements.currentPattern.textContent = pattern.name;
-                    elements.patternDesc.textContent = pattern.description;
-                    
-                    // Determine the suggested bet
-                    let suggestedBet;
-                    if (typeof pattern.suggestion === 'function') {
-                        suggestedBet = pattern.suggestion(gameState.history);
+
+                    let suggestedBet = "No recommended bet";
+                    let recommendationClass = "recommendation-text no-bet";
+                    let betDetails = "";
+
+                    // Define thresholds for recommendations
+                    const strongBankerThreshold = 5;
+                    const moderateBankerThreshold = 2;
+                    const strongPlayerThreshold = -5;
+                    const moderatePlayerThreshold = -2;
+
+                    if (scoreIndex > strongBankerThreshold) {
+                        suggestedBet = "Bet on Banker (Strong)";
+                        recommendationClass = "recommendation-text bet-suggestion";
+                    } else if (scoreIndex > moderateBankerThreshold) {
+                        suggestedBet = "Bet on Banker (Moderate)";
+                        recommendationClass = "recommendation-text bet-suggestion";
+                    } else if (scoreIndex < strongPlayerThreshold) {
+                        suggestedBet = "Bet on Player (Strong)";
+                        recommendationClass = "recommendation-text bet-suggestion";
+                    } else if (scoreIndex < moderatePlayerThreshold) {
+                        suggestedBet = "Bet on Player (Moderate)";
+                        recommendationClass = "recommendation-text bet-suggestion";
                     } else {
-                        suggestedBet = pattern.suggestion;
+                        suggestedBet = "No recommended bet";
+                        recommendationClass = "recommendation-text no-bet";
                     }
-                    
-                    if (pattern.confidence < 0.65) {
-                        recommendation.textContent = "Risky - No recommended bet";
-                        recommendation.className = "recommendation-text no-bet";
-                        betAmount.textContent = "";
-                    } else {
-                        recommendation.textContent = `Bet 0.5-2% of balance on ${suggestedBet}`;
-                        recommendation.className = "recommendation-text bet-suggestion";
-                        
+
+                    if (recommendationClass === "recommendation-text bet-suggestion") {
                         const minBet = Math.floor(gameState.balance * 0.005);
                         const maxBet = Math.floor(gameState.balance * 0.02);
-                        betAmount.textContent = `($${minBet} - $${maxBet})`;
-                        
-                        // Add glow animation to the recommendation
+                        betDetails = `($${minBet} - $${maxBet})`;
                         elements.betRecommendation.classList.add('animate-glow');
                         setTimeout(() => {
                             elements.betRecommendation.classList.remove('animate-glow');
                         }, 2000);
+                    } else {
+                        elements.betRecommendation.classList.remove('animate-glow');
                     }
+
+                    recommendation.textContent = suggestedBet;
+                    recommendation.className = recommendationClass;
+                    betAmount.textContent = betDetails;
                 }
-                
+
                 // Add new outcome to history
-                function addOutcome(outcome) {
-                    gameState.history.push(outcome);
-                    
+                function addOutcome(winner, score) {
+                    // Validate score input for Player/Banker
+                    if ((winner === 'player' || winner === 'banker') && (score === null || score < 0 || score > 9 || isNaN(score))) {
+                        displayMessage('Invalid score for Player/Banker. Please enter a number between 0 and 9.', 'error');
+                        return;
+                    }
+
+                    gameState.history.push({ winner: winner, score: score });
+
                     // Update all UI components
                     updateRoadmap();
                     updateChart();
                     updateStats();
                     updateHistory();
-                    
+                    updateRecommendation(); // Recalculate recommendation after each outcome
+
+                    // Clear score input after adding
+                    elements.scoreInput.value = '';
+
                     // Add animation to the chart
                     elements.chartArea.classList.add('animate__pulse');
                     setTimeout(() => {
                         elements.chartArea.classList.remove('animate__pulse');
                     }, 1000);
                 }
-                
+
                 // Clear all history
                 function clearHistory() {
                     gameState.history = [];
-                    gameState.patterns = [];
-                    gameState.currentPattern = null;
-                    
+
                     // Reset all UI components
                     updateRoadmap();
                     updateChart();
                     updateStats();
                     updateHistory();
-                    
-                    // Reset recommendation
-                    const recommendation = elements.betRecommendation.querySelector('.recommendation-text');
-                    recommendation.textContent = "No recommended bet";
-                    recommendation.className = "recommendation-text no-bet";
-                    elements.betAmount.textContent = "";
-                    elements.currentPattern.textContent = "None detected";
-                    elements.patternDesc.textContent = "Waiting for analysis...";
-                    
+                    updateRecommendation(); // Reset recommendation
+
                     // Add clear animation
                     elements.chartArea.classList.add('animate__fadeOut');
                     setTimeout(() => {
@@ -1450,32 +1408,35 @@
                         }, 500);
                     }, 500);
                 }
-                
+
                 // Event listeners
                 elements.playerBtn.addEventListener('click', function() {
-                    addOutcome('player');
+                    const score = parseInt(elements.scoreInput.value);
+                    addOutcome('player', isNaN(score) ? null : score);
                     this.classList.add('animate__rubberBand');
                     setTimeout(() => {
                         this.classList.remove('animate__rubberBand');
                     }, 1000);
                 });
-                
+
                 elements.bankerBtn.addEventListener('click', function() {
-                    addOutcome('banker');
+                    const score = parseInt(elements.scoreInput.value);
+                    addOutcome('banker', isNaN(score) ? null : score);
                     this.classList.add('animate__rubberBand');
                     setTimeout(() => {
                         this.classList.remove('animate__rubberBand');
                     }, 1000);
                 });
-                
+
                 elements.tieBtn.addEventListener('click', function() {
-                    addOutcome('tie');
+                    // Tie games do not have a score in this context
+                    addOutcome('tie', null);
                     this.classList.add('animate__rubberBand');
                     setTimeout(() => {
                         this.classList.remove('animate__rubberBand');
                     }, 1000);
                 });
-                
+
                 elements.clearBtn.addEventListener('click', function() {
                     clearHistory();
                     this.classList.add('animate__shakeX');
@@ -1483,35 +1444,47 @@
                         this.classList.remove('animate__shakeX');
                     }, 1000);
                 });
-                
+
                 elements.calculateBtn.addEventListener('click', function() {
+                    // This button now explicitly triggers a re-analysis and update of recommendation
                     updateRecommendation();
                     this.classList.add('animate__heartBeat');
                     setTimeout(() => {
                         this.classList.remove('animate__heartBeat');
                     }, 1000);
                 });
-                
+
                 // Initialize the app
                 function init() {
                     initChart();
                     startTimer();
-                    
-                    // Add some sample data
-                    const sampleOutcomes = ['player', 'banker', 'banker', 'player', 'tie', 'banker', 'banker', 'banker', 'player'];
+
+                    // Add some sample data with scores
+                    const sampleOutcomes = [
+                        { winner: 'player', score: 8 },
+                        { winner: 'banker', score: 6 },
+                        { winner: 'banker', score: 3 },
+                        { winner: 'player', score: 9 },
+                        { winner: 'tie', score: null },
+                        { winner: 'banker', score: 7 },
+                        { winner: 'banker', score: 9 },
+                        { winner: 'banker', score: 4 },
+                        { winner: 'player', score: 5 }
+                    ];
                     sampleOutcomes.forEach(outcome => {
                         gameState.history.push(outcome);
                     });
-                    
+
                     updateRoadmap();
                     updateChart();
                     updateStats();
                     updateHistory();
+                    updateRecommendation(); // Initial recommendation calculation
                 }
-                
+
                 init();
             }
-            
+
             // Check authentication status on page load
             checkExistingAuth().then(() => {
                 if (authOverlay.style.display !== 'none') {
