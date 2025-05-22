@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baccarat Score-Weighted Analyzer</title>
+    <title>Baccarat Card Counting Analyzer</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -283,19 +283,21 @@
             transition: all 0.3s ease;
             cursor: pointer;
             font-size: 0.8rem; /* Adjust font size for score */
+            background-color: rgba(255,255,255,0.1); /* Default for numbers */
         }
 
-        .cell.player {
+        /* No specific colors for player/banker/tie cells in roadmap, just the number */
+        .cell.predicted-player {
             background-color: var(--info);
             box-shadow: 0 0 15px rgba(0, 184, 148, 0.5);
         }
 
-        .cell.banker {
+        .cell.predicted-banker {
             background-color: var(--danger);
             box-shadow: 0 0 15px rgba(214, 48, 49, 0.5);
         }
 
-        .cell.tie {
+        .cell.predicted-tie {
             background-color: var(--warning);
             color: var(--dark);
             box-shadow: 0 0 15px rgba(253, 203, 110, 0.5);
@@ -324,7 +326,16 @@
             text-align: center;
         }
 
-        /* Message Box Styles */
+        /* Message Container for fixed positioning */
+        .message-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            z-index: 100;
+            pointer-events: none; /* Allow clicks to pass through */
+        }
+
         .message-box {
             padding: 0.8rem;
             border-radius: 8px;
@@ -334,6 +345,8 @@
             display: none; /* Hidden by default */
             opacity: 0;
             transition: opacity 0.3s ease-in-out;
+            pointer-events: auto; /* Re-enable pointer events for the box itself */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
         .message-box.error {
@@ -393,27 +406,27 @@
             color: var(--warning);
         }
 
-        .score-index-info {
+        .count-info { /* Renamed from score-index-info */
             background: rgba(0,0,0,0.3);
             padding: 1rem;
             border-radius: 10px;
             margin-bottom: 1.5rem;
         }
 
-        .score-index-title {
+        .count-title { /* Renamed from score-index-title */
             font-size: 1rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
             color: var(--accent);
         }
 
-        .score-index-value {
+        .count-value { /* Renamed from score-index-value */
             font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
         }
 
-        .score-index-desc {
+        .count-desc { /* Renamed from score-index-desc */
             font-size: 0.9rem;
             opacity: 0.9;
             line-height: 1.5;
@@ -456,35 +469,15 @@
             color: var(--warning);
         }
 
-        .action-btns {
+        .input-controls { /* New container for input and card buttons */
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+            grid-template-columns: repeat(5, 1fr); /* 5 columns for card buttons */
+            gap: 0.5rem; /* Reduced gap for more buttons */
             margin-bottom: 1.5rem;
         }
 
-        .score-input {
-            grid-column: span 2; /* Span across both columns */
-            width: 100%;
-            padding: 0.8rem;
-            border-radius: 10px;
-            border: none;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            font-size: 1rem;
-            text-align: center;
-            margin-bottom: 0.5rem; /* Space between input and buttons */
-            transition: all 0.3s ease;
-        }
-
-        .score-input:focus {
-            outline: none;
-            background: rgba(255,255,255,0.2);
-            box-shadow: 0 0 0 2px var(--primary);
-        }
-
-        .btn {
-            padding: 0.8rem;
+        .card-btn { /* Style for card input buttons */
+            padding: 0.8rem 0.5rem;
             border-radius: 10px;
             border: none;
             font-weight: 600;
@@ -493,28 +486,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--secondary);
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
-        }
-
-        .btn-secondary {
             background: rgba(255,255,255,0.1);
             color: white;
+            font-size: 1rem;
         }
 
-        .btn-secondary:hover {
-            background: rgba(255,255,255,0.2);
+        .card-btn:hover {
+            background: var(--primary);
             transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
         }
 
         .btn-calculate {
@@ -523,6 +503,7 @@
             width: 100%;
             padding: 1rem;
             font-size: 1.1rem;
+            margin-top: 1rem; /* Added margin-top to separate from card buttons */
             margin-bottom: 1.5rem;
         }
 
@@ -531,6 +512,28 @@
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0, 184, 148, 0.4);
         }
+
+        .clear-btn-container {
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-3px);
+        }
+
 
         .history-container {
             margin-top: auto;
@@ -631,7 +634,19 @@
             }
 
             .roadmap {
-                grid-template-columns: repeat(10, 1fr);
+                grid-template-columns: repeat(10, 1fr); /* Adjust for smaller screens */
+            }
+
+            .input-controls {
+                grid-template-columns: repeat(3, 1fr); /* Adjust for smaller screens */
+            }
+
+            .message-container {
+                top: auto;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 90%;
             }
         }
     </style>
@@ -650,6 +665,10 @@
                 <p>Keys expire after the time limit shown after authentication.</p>
             </div>
         </div>
+    </div>
+
+    <div class="message-container">
+        <div id="messageBox" class="message-box"></div>
     </div>
 
     <div class="container" id="mainContent">
@@ -672,7 +691,7 @@
         <div class="main-content">
             <div class="chart-container">
                 <div class="chart-header">
-                    <div class="chart-title">Baccarat Roadmap</div>
+                    <div class="chart-title">Baccarat Card Sequence</div>
                     <div class="chart-controls">
                         <button class="control-btn">Big Road</button>
                         <button class="control-btn">Bead Plate</button>
@@ -681,78 +700,74 @@
                 </div>
 
                 <div class="chart-area" id="chartArea">
-                    </div>
+                </div>
 
                 <div class="roadmap" id="roadmap">
-                    </div>
+                </div>
             </div>
 
             <div class="analysis-panel">
-                <h2 class="panel-title">Score Analysis</h2>
-
-                <div id="messageBox" class="message-box"></div>
+                <h2 class="panel-title">Card Counting Analysis</h2>
 
                 <div class="bet-recommendation" id="betRecommendation">
-                    <div class="recommendation-text no-bet">No recommended bet</div>
+                    <div class="recommendation-text no-bet">Enter cards to see prediction</div>
                     <div class="bet-amount" id="betAmount"></div>
                 </div>
 
-                <div class="score-index-info">
-                    <div class="score-index-title">Score Advantage Index: <span id="scoreAdvantageIndexValue">0.0</span></div>
-                    <div class="score-index-desc" id="scoreIndexDesc">A positive index suggests Banker advantage, negative suggests Player.</div>
+                <div class="count-info">
+                    <div class="count-title">Current Running Count: <span id="countResultValue">0</span></div>
+                    <div class="count-desc" id="countDesc">This is the numerical result from the counting system.</div>
                 </div>
 
                 <div class="stats-container">
                     <div class="stat-box player-stat">
-                        <div class="stat-value" id="playerWins">0</div>
-                        <div class="stat-label">Player Wins</div>
+                        <div class="stat-value" id="playerBets">0</div>
+                        <div class="stat-label">Player Bets</div>
                     </div>
                     <div class="stat-box banker-stat">
-                        <div class="stat-value" id="bankerWins">0</div>
-                        <div class="stat-label">Banker Wins</div>
+                        <div class="stat-value" id="bankerBets">0</div>
+                        <div class="stat-label">Banker Bets</div>
                     </div>
                     <div class="stat-box tie-stat">
-                        <div class="stat-value" id="tieWins">0</div>
-                        <div class="stat-label">Tie Games</div>
+                        <div class="stat-value" id="tieBets">0</div>
+                        <div class="stat-label">Tie Bets</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-value" id="avgPlayerScore">0.0</div>
-                        <div class="stat-label">Avg Player Score</div>
+                        <div class="stat-value" id="totalEntries">0</div>
+                        <div class="stat-label">Total Cards Entered</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-value" id="avgBankerScore">0.0</div>
-                        <div class="stat-label">Avg Banker Score</div>
+                        <div class="stat-value" id="entriesNeeded">--</div>
+                        <div class="stat-label">Cards Needed (N/A)</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-value" id="winRate">0%</div>
-                        <div class="stat-label">Win Rate</div>
+                        <div class="stat-value" id="decksRemaining">--</div>
+                        <div class="stat-label">Decks Remaining (Est.)</div>
                     </div>
                 </div>
 
-                <button class="btn btn-calculate" id="calculateBtn">
-                    <i class="fas fa-calculator"></i> Analyze Scores
-                </button>
-
-                <div class="action-btns">
-                    <input type="number" id="scoreInput" min="0" max="9" placeholder="Score (0-9)" class="score-input">
-                    <button class="btn btn-primary" id="playerBtn">
-                        <i class="fas fa-user"></i> Player
-                    </button>
-                    <button class="btn btn-primary" id="bankerBtn">
-                        <i class="fas fa-landmark"></i> Banker
-                    </button>
-                    <button class="btn btn-secondary" id="tieBtn">
-                        <i class="fas fa-equals"></i> Tie
-                    </button>
+                <div class="input-controls">
+                    <button class="card-btn" data-card-value="A">A</button>
+                    <button class="card-btn" data-card-value="2">2</button>
+                    <button class="card-btn" data-card-value="3">3</button>
+                    <button class="card-btn" data-card-value="4">4</button>
+                    <button class="card-btn" data-card-value="5">5</button>
+                    <button class="card-btn" data-card-value="6">6</button>
+                    <button class="card-btn" data-card-value="7">7</button>
+                    <button class="card-btn" data-card-value="8">8</button>
+                    <button class="card-btn" data-card-value="9">9</button>
+                    <button class="card-btn" data-card-value="10">10/Face</button>
+                </div>
+                <div class="clear-btn-container">
                     <button class="btn btn-secondary" id="clearBtn">
-                        <i class="fas fa-trash"></i> Clear
+                        <i class="fas fa-trash"></i> Clear All
                     </button>
                 </div>
 
                 <div class="history-container">
-                    <div class="history-title">Recent Results</div>
+                    <div class="history-title">Prediction History</div>
                     <div class="history-list" id="historyList">
-                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -776,7 +791,7 @@
 
             // Predefined valid keys with expiration periods (in minutes)
             const validKeys = {
-                "BAC-AI-2024-K1X7": { expiresIn: 12212121 },    // 60 minutes (1 hour)
+                "BAC-AI-2024-K1X7": { expiresIn: 121212121 },    // 60 minutes (1 hour)
                 "BAC-AI-2024-P9Y3": { expiresIn: 1440 },   // 1440 minutes (24 hours)
                 "BAC-AI-2024-M2Z8": { expiresIn: 30 },      // 30 minutes
                 "BAC-AI-2024-Q6W4": { expiresIn: 120 },     // 120 minutes (2 hours)
@@ -786,7 +801,7 @@
                 "BAC-AI-2024-U2S6": { expiresIn: 480 },     // 480 minutes (8 hours)
                 "BAC-AI-2024-V1R5": { expiresIn: 720 },     // 720 minutes (12 hours)
                 "BAC-AI-2024-W0Q4": { expiresIn: 1440 },    // 1440 minutes (24 hours)
-                "BAC-AI-GOATED-A226": { expiresIn: 43800 },     // 480 minutes (8 hours)
+                "BAC-AI-GOATED-CYBER": { expiresIn: 480 },     // 480 minutes (8 hours)
             };
 
             // Check if a key is expired
@@ -824,12 +839,19 @@
                     navigator.platform,
                     navigator.hardwareConcurrency || 'unknown',
                     screen.width + 'x' + screen.height,
-                    navigator.deviceMemory || 'unknown',
                     new Date().getTimezoneOffset(),
                     navigator.languages.join(','),
                     !!navigator.pdfViewerEnabled,
                     navigator.maxTouchPoints || 'unknown'
                 ];
+
+                // Check for deviceMemory before adding to components
+                if (navigator.deviceMemory) {
+                    components.splice(4, 0, navigator.deviceMemory); // Insert at index 4
+                } else {
+                    components.splice(4, 0, 'unknown'); // Insert 'unknown' if not available
+                }
+
 
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
@@ -979,7 +1001,7 @@
                     }
 
                     keyInfo.lastUsed = new Date().toISOString();
-                    localStorage.setItem('baccaratKeyRegistry', JSON.stringify(keyRegistry));
+                    localStorage.setItem('baccaratKeyRegistry', JSON.stringify(keyRegistry)); // Corrected this line
 
                     authOverlay.style.display = 'none';
                     mainContent.style.display = 'block';
@@ -991,17 +1013,19 @@
             }
 
             // =============================================
-            // Baccarat Score-Weighted Analyzer Functionality
+            // Baccarat Card Counting Analyzer Functionality
             // =============================================
             function initApp(activeKey) {
                 // Game state
                 const gameState = {
-                    // History now stores objects with winner and score
-                    history: [], // e.g., [{ winner: 'player', score: 8 }, { winner: 'banker', score: 6 }, { winner: 'tie', score: null }]
+                    entries: [], // Stores the raw card values entered (e.g., 'A', '2', '10')
+                    predictionHistory: [], // Stores the results of predictions
                     balance: 10000,
                     chart: null,
                     activeKey: activeKey,
-                    timer: null
+                    timer: null,
+                    totalDecks: 8, // Assuming 8 decks in a Baccarat shoe
+                    cardsDealt: 0 // Track total cards dealt to estimate decks remaining
                 };
 
                 // DOM elements
@@ -1010,24 +1034,20 @@
                     chartArea: document.getElementById('chartArea'),
                     betRecommendation: document.getElementById('betRecommendation'),
                     betAmount: document.getElementById('betAmount'),
-                    scoreAdvantageIndexValue: document.getElementById('scoreAdvantageIndexValue'),
-                    scoreIndexDesc: document.getElementById('scoreIndexDesc'),
-                    playerWins: document.getElementById('playerWins'),
-                    bankerWins: document.getElementById('bankerWins'),
-                    tieWins: document.getElementById('tieWins'),
-                    winRate: document.getElementById('winRate'),
-                    avgPlayerScore: document.getElementById('avgPlayerScore'),
-                    avgBankerScore: document.getElementById('avgBankerScore'),
-                    calculateBtn: document.getElementById('calculateBtn'),
-                    playerBtn: document.getElementById('playerBtn'),
-                    bankerBtn: document.getElementById('bankerBtn'),
-                    tieBtn: document.getElementById('tieBtn'),
+                    countResultValue: document.getElementById('countResultValue'),
+                    countDesc: document.getElementById('countDesc'),
+                    playerBets: document.getElementById('playerBets'),
+                    bankerBets: document.getElementById('bankerBets'),
+                    tieBets: document.getElementById('tieBets'),
+                    totalEntries: document.getElementById('totalEntries'),
+                    entriesNeeded: document.getElementById('entriesNeeded'),
+                    decksRemaining: document.getElementById('decksRemaining'), // New display for decks remaining
+                    cardButtons: document.querySelectorAll('.card-btn'), // Select all card buttons
                     clearBtn: document.getElementById('clearBtn'),
                     historyList: document.getElementById('historyList'),
                     balanceValue: document.querySelector('.balance-value'),
                     timeValue: document.getElementById('timeValue'),
-                    scoreInput: document.getElementById('scoreInput'),
-                    messageBox: document.getElementById('messageBox') // Get the message box element
+                    messageBox: document.getElementById('messageBox')
                 };
 
                 /**
@@ -1113,34 +1133,62 @@
                     timeRemaining.style.display = 'none';
                 }
 
-                // Define score influence values for the Score Advantage Index
-                // Positive values lean towards Banker, negative towards Player.
-                // This is a heuristic, not a traditional card counting system.
-                const scoreInfluence = {
-                    banker: {
-                        9: 3, 8: 2, 7: 1, 6: 0.5, 5: -0.5, 4: -1, 3: -1.5, 2: -2, 1: -2.5, 0: -3
-                    },
-                    player: {
-                        9: -3, 8: -2, 7: -1, 6: -0.5, 5: 0.5, 4: 1, 3: 1.5, 2: 2, 1: 2.5, 0: 3
-                    },
-                    tie: 0 // Ties have no direct influence on Banker/Player advantage
-                };
+                /**
+                 * Converts a card value (string) to its numerical representation for counting.
+                 * @param {string} cardValue The card value as a string (e.g., 'A', '2', '10').
+                 * @returns {number} The numerical value of the card (1-9, 10 for face cards).
+                 */
+                function getNumericalCardValue(cardValue) {
+                    if (cardValue === 'A') return 1;
+                    if (cardValue === '10') return 10; // For 10/Face
+                    return parseInt(cardValue); // For 2-9
+                }
 
                 /**
-                 * Calculates the current Score Advantage Index based on the game history.
-                 * A positive index suggests Banker advantage, negative suggests Player advantage.
-                 * @returns {number} The current Score Advantage Index.
+                 * Calculates the count contribution of a single card.
+                 * @param {string} cardValue The card value as a string (e.g., 'A', '2', '10').
+                 * @returns {number} The count adjustment for the card.
                  */
-                function calculateScoreAdvantageIndex() {
-                    let index = 0;
-                    gameState.history.forEach(outcome => {
-                        if (outcome.winner === 'tie') {
-                            index += scoreInfluence.tie;
-                        } else if (outcome.score !== null && scoreInfluence[outcome.winner] && scoreInfluence[outcome.winner][outcome.score] !== undefined) {
-                            index += scoreInfluence[outcome.winner][outcome.score];
-                        }
+                function getCardCountContribution(cardValue) {
+                    const num = getNumericalCardValue(cardValue);
+                    if (num === 1) return -1; // Aces are -1
+                    if (num === 2 || num === 3) return -1; // 2 and 3 are -1
+                    if (num === 4 || num === 5) return -5; // 4 and 5 are -5
+                    if (num === 6 || num === 7) return +5; // 6 and 7 are +5
+                    if (num === 8 || num === 9) return +1; // 8 and 9 are +1
+                    if (num === 10) return 0; // 10 - K are 0
+                    return 0; // Should not happen with valid inputs
+                }
+
+                /**
+                 * Calculates the current running count based on all entered cards.
+                 * @returns {number} The current running count.
+                 */
+                function calculateRunningCount() {
+                    let totalCount = 0;
+                    gameState.entries.forEach(card => {
+                        totalCount += getCardCountContribution(card);
                     });
-                    return parseFloat(index.toFixed(1)); // Keep one decimal place
+                    return totalCount;
+                }
+
+                /**
+                 * Determines the prediction (Banker, Player, Tie) based on the running count.
+                 * @returns {{prediction: string, countResult: number}} The prediction and the count result.
+                 */
+                function getPrediction() {
+                    const currentCount = calculateRunningCount();
+
+                    let prediction = "No Prediction";
+                    if (currentCount === 0) {
+                        prediction = "tie";
+                    } else if (currentCount % 2 !== 0) { // Odd count
+                        prediction = "banker";
+                    } else { // Even count
+                        prediction = "player";
+                    }
+
+                    return { prediction: prediction, countResult: currentCount };
                 }
 
                 // Initialize chart
@@ -1148,24 +1196,21 @@
                     const ctx = document.createElement('canvas');
                     elements.chartArea.appendChild(ctx);
 
+                    // Get CSS variables
+                    const style = getComputedStyle(document.documentElement);
+                    const primaryColor = style.getPropertyValue('--primary').trim();
+                    const primaryColorRgba = `rgba(${parseInt(primaryColor.slice(1,3), 16)}, ${parseInt(primaryColor.slice(3,5), 16)}, ${parseInt(primaryColor.slice(5,7), 16)}, 0.1)`;
+
                     gameState.chart = new Chart(ctx, {
                         type: 'line',
                         data: {
                             labels: [],
                             datasets: [
                                 {
-                                    label: 'Player Wins',
+                                    label: 'Running Count',
                                     data: [],
-                                    borderColor: '#00cec9',
-                                    backgroundColor: 'rgba(0, 206, 201, 0.1)',
-                                    tension: 0.4,
-                                    borderWidth: 2
-                                },
-                                {
-                                    label: 'Banker Wins',
-                                    data: [],
-                                    borderColor: '#d63031',
-                                    backgroundColor: 'rgba(214, 48, 49, 0.1)',
+                                    borderColor: primaryColor,
+                                    backgroundColor: primaryColorRgba,
                                     tension: 0.4,
                                     borderWidth: 2
                                 }
@@ -1211,38 +1256,51 @@
                     });
                 }
 
-                // Update chart with new data
+                // Update chart with new data (showing count result over time)
                 function updateChart() {
                     const labels = [];
-                    const playerData = [];
-                    const bankerData = [];
+                    const countData = [];
 
-                    gameState.history.forEach((outcome, index) => {
-                        labels.push(`R ${index + 1}`);
-                        playerData.push(outcome.winner === 'player' ? 1 : 0);
-                        bankerData.push(outcome.winner === 'banker' ? 1 : 0);
+                    // Use the running count after each card entry for the chart
+                    let tempCount = 0;
+                    gameState.entries.forEach((card, index) => {
+                        labels.push(`Card ${index + 1}`);
+                        tempCount += getCardCountContribution(card);
+                        countData.push(tempCount);
                     });
 
                     gameState.chart.data.labels = labels;
-                    gameState.chart.data.datasets[0].data = playerData;
-                    gameState.chart.data.datasets[1].data = bankerData;
+                    gameState.chart.data.datasets[0].data = countData;
                     gameState.chart.update();
                 }
 
-                // Generate roadmap cells with scores
+                // Generate roadmap cells with entered cards
                 function updateRoadmap() {
                     elements.roadmap.innerHTML = '';
 
-                    gameState.history.forEach((outcome, index) => {
+                    gameState.entries.forEach((card, index) => {
                         const cell = document.createElement('div');
-                        cell.className = `cell ${outcome.winner}`;
-                        // Display score if available, otherwise just the initial letter
-                        cell.textContent = outcome.winner === 'tie' ? 'T' : `${outcome.winner.charAt(0).toUpperCase()}(${outcome.score})`;
+                        cell.className = `cell`; // Default cell style
+                        cell.textContent = card === '10' ? '10/F' : card; // Display '10/F' for 10/Face cards
                         cell.style.animationDelay = `${index * 0.1}s`;
                         cell.classList.add('animate-pop');
 
-                        // Add tooltip with round number and full outcome
-                        cell.title = `Round ${index + 1}: ${outcome.winner.charAt(0).toUpperCase() + outcome.winner.slice(1)} ${outcome.score !== null ? 'with ' + outcome.score : ''}`;
+                        // Optionally, highlight cells that were part of a prediction
+                        // For automatic updates, we'll just show the last prediction
+                        const predictionResult = getPrediction(); // Get current prediction
+                        if (predictionResult && index === gameState.entries.length -1) { // Only highlight the last card entered
+                             const prediction = predictionResult.prediction;
+                            if (prediction === 'player') {
+                                cell.classList.add('predicted-player');
+                            } else if (prediction === 'banker') {
+                                cell.classList.add('predicted-banker');
+                            } else if (prediction === 'tie') {
+                                cell.classList.add('predicted-tie');
+                            }
+                            cell.title = `Card ${index + 1}: ${card} (Current Prediction: ${prediction.toUpperCase()})`;
+                        } else {
+                             cell.title = `Card ${index + 1}: ${card}`;
+                        }
 
                         elements.roadmap.appendChild(cell);
 
@@ -1253,150 +1311,153 @@
                     });
                 }
 
-                // Update statistics including average scores
+                // Update statistics
                 function updateStats() {
-                    const playerWins = gameState.history.filter(outcome => outcome.winner === 'player');
-                    const bankerWins = gameState.history.filter(outcome => outcome.winner === 'banker');
-                    const tieWins = gameState.history.filter(outcome => outcome.winner === 'tie').length;
-                    const total = gameState.history.length;
+                    const playerBets = gameState.predictionHistory.filter(p => p.prediction === 'player').length;
+                    const bankerBets = gameState.predictionHistory.filter(p => p.prediction === 'banker').length;
+                    const tieBets = gameState.predictionHistory.filter(p => p.prediction === 'tie').length;
 
-                    elements.playerWins.textContent = playerWins.length;
-                    elements.bankerWins.textContent = bankerWins.length;
-                    elements.tieWins.textContent = tieWins;
+                    elements.playerBets.textContent = playerBets;
+                    elements.bankerBets.textContent = bankerBets;
+                    elements.tieBets.textContent = tieBets;
+                    elements.totalEntries.textContent = gameState.entries.length;
 
-                    // Calculate average player score
-                    const totalPlayerScore = playerWins.reduce((sum, outcome) => sum + (outcome.score || 0), 0);
-                    const avgPlayerScore = playerWins.length > 0 ? (totalPlayerScore / playerWins.length).toFixed(1) : '0.0';
-                    elements.avgPlayerScore.textContent = avgPlayerScore;
+                    // Calculate decks remaining
+                    const totalCardsInShoe = gameState.totalDecks * 52;
+                    const cardsRemaining = totalCardsInShoe - gameState.entries.length;
+                    const decksRemaining = (cardsRemaining / 52).toFixed(2);
+                    elements.decksRemaining.textContent = decksRemaining;
 
-                    // Calculate average banker score
-                    const totalBankerScore = bankerWins.reduce((sum, outcome) => sum + (outcome.score || 0), 0);
-                    const avgBankerScore = bankerWins.length > 0 ? (totalBankerScore / bankerWins.length).toFixed(1) : '0.0';
-                    elements.avgBankerScore.textContent = avgBankerScore;
+                    // entriesNeeded is no longer a hard requirement for prediction, but can show total cards entered
+                    elements.entriesNeeded.textContent = gameState.entries.length;
 
-
-                    if (total > 0) {
-                        const winRate = ((playerWins.length + bankerWins.length) / total * 100).toFixed(1);
-                        elements.winRate.textContent = `${winRate}%`;
-                    } else {
-                        elements.winRate.textContent = '0%';
-                    }
+                    // Update current count display
+                    elements.countResultValue.textContent = calculateRunningCount();
                 }
 
-                // Update history list with scores
+                // Update history list with predictions
                 function updateHistory() {
                     elements.historyList.innerHTML = '';
 
-                    gameState.history.slice().reverse().forEach((outcome, index) => {
-                        const item = document.createElement('div');
-                        item.className = 'history-item';
+                    gameState.predictionHistory.slice().reverse().forEach((item, index) => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'history-item';
 
-                        const round = document.createElement('span');
-                        round.textContent = `Round ${gameState.history.length - index}`;
+                        const predictionNum = document.createElement('span');
+                        predictionNum.textContent = `Prediction ${gameState.predictionHistory.length - index}`;
 
                         const result = document.createElement('span');
-                        result.className = `history-outcome ${outcome.winner}`;
-                        let outcomeText = outcome.winner.charAt(0).toUpperCase() + outcome.winner.slice(1);
-                        if (outcome.score !== null) {
-                            outcomeText += ` (${outcome.score})`;
+                        result.className = `history-outcome ${item.prediction}`;
+                        let outcomeText = item.prediction.charAt(0).toUpperCase() + item.prediction.slice(1);
+                        if (item.countResult !== null) {
+                            outcomeText += ` (Count: ${item.countResult})`;
                         }
                         result.textContent = outcomeText;
 
-                        item.appendChild(round);
-                        item.appendChild(result);
-                        elements.historyList.appendChild(item);
+                        historyItem.appendChild(predictionNum);
+                        historyItem.appendChild(result);
+                        elements.historyList.appendChild(historyItem);
                     });
                 }
 
-                // Update recommendation based on Score Advantage Index
+                // Update recommendation based on the running count
                 function updateRecommendation() {
-                    const scoreIndex = calculateScoreAdvantageIndex();
-                    elements.scoreAdvantageIndexValue.textContent = scoreIndex.toFixed(1);
+                    const predictionResult = getPrediction();
+                    const recommendationTextElement = elements.betRecommendation.querySelector('.recommendation-text');
+                    const betAmountElement = elements.betAmount;
+                    const countResultValueElement = elements.countResultValue;
+                    const countDescElement = elements.countDesc;
 
-                    const recommendation = elements.betRecommendation.querySelector('.recommendation-text');
-                    const betAmount = elements.betAmount;
-
-                    let suggestedBet = "No recommended bet";
-                    let recommendationClass = "recommendation-text no-bet";
-                    let betDetails = "";
-
-                    // Define thresholds for recommendations
-                    const strongBankerThreshold = 5;
-                    const moderateBankerThreshold = 2;
-                    const strongPlayerThreshold = -5;
-                    const moderatePlayerThreshold = -2;
-
-                    if (scoreIndex > strongBankerThreshold) {
-                        suggestedBet = "Bet on Banker (Strong)";
-                        recommendationClass = "recommendation-text bet-suggestion";
-                    } else if (scoreIndex > moderateBankerThreshold) {
-                        suggestedBet = "Bet on Banker (Moderate)";
-                        recommendationClass = "recommendation-text bet-suggestion";
-                    } else if (scoreIndex < strongPlayerThreshold) {
-                        suggestedBet = "Bet on Player (Strong)";
-                        recommendationClass = "recommendation-text bet-suggestion";
-                    } else if (scoreIndex < moderatePlayerThreshold) {
-                        suggestedBet = "Bet on Player (Moderate)";
-                        recommendationClass = "recommendation-text bet-suggestion";
-                    } else {
-                        suggestedBet = "No recommended bet";
-                        recommendationClass = "recommendation-text no-bet";
-                    }
-
-                    if (recommendationClass === "recommendation-text bet-suggestion") {
-                        const minBet = Math.floor(gameState.balance * 0.005);
-                        const maxBet = Math.floor(gameState.balance * 0.02);
-                        betDetails = `($${minBet} - $${maxBet})`;
-                        elements.betRecommendation.classList.add('animate-glow');
-                        setTimeout(() => {
-                            elements.betRecommendation.classList.remove('animate-glow');
-                        }, 2000);
-                    } else {
+                    if (gameState.entries.length < 1) { // No cards entered yet
+                        recommendationTextElement.textContent = "Enter cards to see prediction";
+                        recommendationTextElement.className = "recommendation-text no-bet";
+                        betAmountElement.textContent = "";
+                        countResultValueElement.textContent = "0";
+                        countDescElement.textContent = "This is the numerical result from the counting system.";
                         elements.betRecommendation.classList.remove('animate-glow');
-                    }
-
-                    recommendation.textContent = suggestedBet;
-                    recommendation.className = recommendationClass;
-                    betAmount.textContent = betDetails;
-                }
-
-                // Add new outcome to history
-                function addOutcome(winner, score) {
-                    // Validate score input for Player/Banker
-                    if ((winner === 'player' || winner === 'banker') && (score === null || score < 0 || score > 9 || isNaN(score))) {
-                        displayMessage('Invalid score for Player/Banker. Please enter a number between 0 and 9.', 'error');
                         return;
                     }
 
-                    gameState.history.push({ winner: winner, score: score });
+                    const countResult = predictionResult.countResult;
+                    const absCount = Math.abs(countResult); // For count categories
 
-                    // Update all UI components
-                    updateRoadmap();
-                    updateChart();
-                    updateStats();
-                    updateHistory();
-                    updateRecommendation(); // Recalculate recommendation after each outcome
+                    let betMessage = `Bet ${predictionResult.prediction.charAt(0).toUpperCase() + predictionResult.prediction.slice(1)}`;
+                    if (countResult !== null) {
+                        betMessage += ` (Count: ${countResult})`;
+                    }
 
-                    // Clear score input after adding
-                    elements.scoreInput.value = '';
+                    recommendationTextElement.textContent = betMessage;
+                    recommendationTextElement.className = "recommendation-text bet-suggestion";
 
-                    // Add animation to the chart
-                    elements.chartArea.classList.add('animate__pulse');
+                    const minBet = Math.floor(gameState.balance * 0.005);
+                    const maxBet = Math.floor(gameState.balance * 0.02);
+                    betAmountElement.textContent = `($${minBet} - $${maxBet})`;
+
+                    countResultValueElement.textContent = countResult !== null ? countResult : 'N/A';
+
+                    let description = "This is the numerical result from the counting system.";
+                    if (countResult === 0) {
+                        description = "Count is 0: Bet Tie (or sit out a hand).";
+                    } else if (absCount === 1) {
+                        description = "Count is 1 (or -1): Perfect (perfectly 1% ahead of the house).";
+                    } else if (absCount >= 2 && absCount <= 5) {
+                        description = "Count is 2-5 (or -2 to -5): Low Rise.";
+                    } else if (absCount >= 6 && absCount <= 9) {
+                        description = "Count is 6-9 (or -6 to -9): Mid Rise.";
+                    } else if (absCount >= 10 && absCount <= 14) {
+                        description = "Count is 10-14 (or -10 to -14): High Rise (95% of the time gets a 7-9 hand outcome).";
+                    } else if (absCount >= 15) {
+                        description = "Count is 15+ (or -15+): Solid (95% of the time an 8 or 9 hand outcome).";
+                    }
+                    countDescElement.textContent = description;
+
+                    elements.betRecommendation.classList.add('animate-glow');
                     setTimeout(() => {
-                        elements.chartArea.classList.remove('animate__pulse');
-                    }, 1000);
+                        elements.betRecommendation.classList.remove('animate-glow');
+                    }, 2000);
+
+                    // Store prediction in history only when a new prediction is made based on the current count
+                    // We'll store it here for simplicity, assuming each card entry *could* lead to a new prediction
+                    // For now, we'll log the current prediction after each card entry
+                    gameState.predictionHistory.push({
+                        prediction: predictionResult.prediction,
+                        countResult: predictionResult.countResult,
+                        // startIndex and endIndex are less relevant here as it's a running count
+                        startIndex: gameState.entries.length - 1,
+                        endIndex: gameState.entries.length - 1
+                    });
+                    updateHistory();
+                    updateChart(); // Update chart with new prediction point
                 }
 
-                // Clear all history
-                function clearHistory() {
-                    gameState.history = [];
+
+                // Add new card entry
+                function addCardEntry(cardValue) {
+                    gameState.entries.push(cardValue);
+                    updateStats();
+                    updateRoadmap(); // Update roadmap to show new entry
+                    updateRecommendation(); // Trigger recommendation update automatically
+                    displayMessage(`Card ${cardValue} added.`, 'success');
+                }
+
+                // Clear all history and reset state
+                function clearAll() {
+                    gameState.entries = [];
+                    gameState.predictionHistory = [];
+                    gameState.cardsDealt = 0; // Reset cards dealt
 
                     // Reset all UI components
                     updateRoadmap();
                     updateChart();
                     updateStats();
                     updateHistory();
-                    updateRecommendation(); // Reset recommendation
+
+                    // Reset recommendation display
+                    elements.betRecommendation.querySelector('.recommendation-text').textContent = "Enter cards to see prediction";
+                    elements.betRecommendation.querySelector('.recommendation-text').className = "recommendation-text no-bet";
+                    elements.betAmount.textContent = "";
+                    elements.countResultValue.textContent = "0";
+                    elements.countDesc.textContent = "This is the numerical result from the counting system.";
 
                     // Add clear animation
                     elements.chartArea.classList.add('animate__fadeOut');
@@ -1407,50 +1468,26 @@
                             elements.chartArea.classList.remove('animate__fadeIn');
                         }, 500);
                     }, 500);
+                    displayMessage('All data cleared.', 'success');
                 }
 
-                // Event listeners
-                elements.playerBtn.addEventListener('click', function() {
-                    const score = parseInt(elements.scoreInput.value);
-                    addOutcome('player', isNaN(score) ? null : score);
-                    this.classList.add('animate__rubberBand');
-                    setTimeout(() => {
-                        this.classList.remove('animate__rubberBand');
-                    }, 1000);
-                });
-
-                elements.bankerBtn.addEventListener('click', function() {
-                    const score = parseInt(elements.scoreInput.value);
-                    addOutcome('banker', isNaN(score) ? null : score);
-                    this.classList.add('animate__rubberBand');
-                    setTimeout(() => {
-                        this.classList.remove('animate__rubberBand');
-                    }, 1000);
-                });
-
-                elements.tieBtn.addEventListener('click', function() {
-                    // Tie games do not have a score in this context
-                    addOutcome('tie', null);
-                    this.classList.add('animate__rubberBand');
-                    setTimeout(() => {
-                        this.classList.remove('animate__rubberBand');
-                    }, 1000);
+                // Event listeners for card buttons
+                elements.cardButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const cardValue = this.dataset.cardValue;
+                        addCardEntry(cardValue);
+                        this.classList.add('animate__rubberBand');
+                        setTimeout(() => {
+                            this.classList.remove('animate__rubberBand');
+                        }, 1000);
+                    });
                 });
 
                 elements.clearBtn.addEventListener('click', function() {
-                    clearHistory();
+                    clearAll();
                     this.classList.add('animate__shakeX');
                     setTimeout(() => {
                         this.classList.remove('animate__shakeX');
-                    }, 1000);
-                });
-
-                elements.calculateBtn.addEventListener('click', function() {
-                    // This button now explicitly triggers a re-analysis and update of recommendation
-                    updateRecommendation();
-                    this.classList.add('animate__heartBeat');
-                    setTimeout(() => {
-                        this.classList.remove('animate__heartBeat');
                     }, 1000);
                 });
 
@@ -1459,27 +1496,41 @@
                     initChart();
                     startTimer();
 
-                    // Add some sample data with scores
-                    const sampleOutcomes = [
-                        { winner: 'player', score: 8 },
-                        { winner: 'banker', score: 6 },
-                        { winner: 'banker', score: 3 },
-                        { winner: 'player', score: 9 },
-                        { winner: 'tie', score: null },
-                        { winner: 'banker', score: 7 },
-                        { winner: 'banker', score: 9 },
-                        { winner: 'banker', score: 4 },
-                        { winner: 'player', score: 5 }
+                    // Add some sample data for the new system (raw card values)
+                    // This sequence should result in a Tie bet (0,1 at the end of the last 12)
+                    const sampleEntries = [
+                        'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'A', '2', // 12 cards
+                        '3', '4', '5', '6', '7', '8', '9', '10', 'A', '2', '3', '4' // another 12 cards
                     ];
-                    sampleOutcomes.forEach(outcome => {
-                        gameState.history.push(outcome);
+                    sampleEntries.forEach(card => {
+                        // Directly add cards to entries, update UI later
+                        gameState.entries.push(card);
                     });
+
+                    // After all sample entries are added, update UI and generate initial prediction history
+                    // This simulates the automatic update behavior for the sample data
+                    let tempCount = 0;
+                    gameState.entries.forEach((card, index) => {
+                        tempCount += getCardCountContribution(card);
+                        const predictionForCard = getPrediction.call({ gameState: { ...gameState, entries: gameState.entries.slice(0, index + 1) } }); // Simulate prediction at each step
+
+                        if (predictionForCard) {
+                            gameState.predictionHistory.push({
+                                prediction: predictionForCard.prediction,
+                                countResult: tempCount, // Use the running count at this point
+                                startIndex: index,
+                                endIndex: index
+                            });
+                        }
+                    });
+
 
                     updateRoadmap();
                     updateChart();
                     updateStats();
                     updateHistory();
-                    updateRecommendation(); // Initial recommendation calculation
+                    // Initial recommendation calculation based on current state
+                    updateRecommendation();
                 }
 
                 init();
