@@ -1397,17 +1397,17 @@
 
                     let description = "This is the numerical result from the counting system.";
                     if (countResult === 0) {
-                        description = "Count is 0: Bet Tie (or sit out a hand).";
+                        description = "Count is 0: Bet Tie or just dont bet this round";
                     } else if (absCount === 1) {
-                        description = "Count is 1 (or -1): Perfect (perfectly 1% ahead of the house).";
+                        description = "Count is 1 (or -1): Perfect 1% ahead of the house.";
                     } else if (absCount >= 2 && absCount <= 5) {
                         description = "Count is 2-5 (or -2 to -5): Low Rise.";
                     } else if (absCount >= 6 && absCount <= 9) {
                         description = "Count is 6-9 (or -6 to -9): Mid Rise.";
                     } else if (absCount >= 10 && absCount <= 14) {
-                        description = "Count is 10-14 (or -10 to -14): High Rise (95% of the time gets a 7-9 hand outcome).";
+                        description = "Count is 10-14 (or -10 to -14): High Rise high chance for 7 and 8 and 9.";
                     } else if (absCount >= 15) {
-                        description = "Count is 15+ (or -15+): Solid (95% of the time an 8 or 9 hand outcome).";
+                        description = "Count is 15+ (or -15+): Solid high chance for  8 or 9 hand outcome).";
                     }
                     countDescElement.textContent = description;
 
