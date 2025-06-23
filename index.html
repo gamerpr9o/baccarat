@@ -1411,6 +1411,40 @@
             .hand-score { font-size: 2.2rem; margin-top: 0.8rem; }
             .game-result { font-size: 2.2rem; margin-top: 1.5rem; }
         }
+
+        /* NEW: Added to stabilize dynamic content areas in Pattern Recognition tab */
+        #patternStrategyDetails {
+            min-height: 120px; /* Adjust based on expected content height */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.5s ease; /* Smooth transition for content changes */
+            overflow: hidden; /* Hide overflow when content changes */
+            text-align: center; /* Center the text within the div */
+        }
+        #patternAnalysisResult {
+            min-height: 100px; /* Adjust based on expected result height */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.5s ease; /* Smooth transition for content changes */
+            overflow: hidden;
+        }
+
+        /* Ensuring chart containers have a consistent height */
+        #patternOutcomeDistributionChartContainer canvas,
+        #patternAnalysisChart {
+            height: 300px; /* Fixed height for canvases inside these containers */
+            width: 100%; /* Ensure width is responsive */
+        }
+
+        /* Added to give slight vertical padding to dropdown items for better touch targets */
+        .dropdown-item {
+            padding-top: 1.4rem;
+            padding-bottom: 1.4rem;
+        }
     </style>
 </head>
 <body>
@@ -1837,6 +1871,7 @@
                 authSuccess.style.display = 'block';
                 this.disabled = true;
 
+                // Animate out the auth overlay and show main content
                 setTimeout(() => {
                     authOverlay.style.opacity = '0';
                     setTimeout(() => {
@@ -1844,8 +1879,8 @@
                         mainContent.style.display = 'block';
                         mainContent.classList.add('animate-pop-in');
                         initApp(enteredKey);
-                    }, 500);
-                }, 1500);
+                    }, 500); // Duration of opacity transition
+                }, 1500); // Delay before starting exit animation
             });
 
             // Check for existing auth on page load
@@ -2537,6 +2572,11 @@
                             detailsHtml = `<p class="text-center text-gray-400">Choose a pattern strategy from the dropdown above to see its description and controls.</p>`;
                     }
                     elements.patternStrategyDetails.innerHTML = detailsHtml;
+                    // Reset animations on the details section to ensure smooth re-entry
+                    elements.patternStrategyDetails.classList.remove('animate__animated', 'animate__fadeIn');
+                    void elements.patternStrategyDetails.offsetWidth; // Trigger reflow
+                    elements.patternStrategyDetails.classList.add('animate__animated', 'animate__fadeIn');
+
                     if (gameState.currentPatternStrategy === 'masaniello') {
                         drawMasanielloGrid();
                         elements.patternOutcomeDistributionChartContainer.classList.add('hidden'); // Hide outcome distribution chart for Masaniello
@@ -2781,8 +2821,11 @@
                 function updatePatternAnalysis() {
                     const resultDiv = elements.patternAnalysisResult;
                     resultDiv.classList.remove('hidden');
-                    resultDiv.classList.add('animate__animated', 'animate__fadeIn'); // Animate result in
-                    setTimeout(() => resultDiv.classList.remove('animate__fadeIn'), 800); // Remove animation class
+                    // Ensure the animation is re-triggered on every update
+                    resultDiv.classList.remove('animate__animated', 'animate__fadeIn');
+                    void resultDiv.offsetWidth; // Trigger reflow
+                    resultDiv.classList.add('animate__animated', 'animate__fadeIn');
+
 
                     resultDiv.innerHTML = ''; // Clear previous content
 
@@ -2875,7 +2918,7 @@
                     elements.patternAnalysisResult.classList.add('hidden'); // Hide result until new data
                     elements.patternAnalysisResult.innerHTML = ''; // Clear previous results
                     
-                    resetPatternBettingSystem(); // Reset betting progression state
+                    resetPatternBettingSystem(true); // Reset betting progression state
                     elements.clearPatternBtn.classList.add('animate__shakeX');
                     setTimeout(() => {
                         elements.clearPatternBtn.classList.remove('animate__shakeX');
@@ -2926,6 +2969,11 @@
                             detailsHtml = `<p class="text-center text-gray-400">Choose a betting system from the dropdown above to see its description and controls.</p>`;
                     }
                     elements.patternBettingSystemDetails.innerHTML = detailsHtml;
+                    // Reset animations on the betting system details section
+                    elements.patternBettingSystemDetails.classList.remove('animate__animated', 'animate__fadeIn');
+                    void elements.patternBettingSystemDetails.offsetWidth; // Trigger reflow
+                    elements.patternBettingSystemDetails.classList.add('animate__animated', 'animate__fadeIn');
+
 
                     if (gameState.patternBetting.currentSystem === 'flatBetting') {
                         document.getElementById('setPatternFlatBetBtn').onclick = () => {
@@ -3088,19 +3136,13 @@
                     }
                     // Ensure the canvas context is properly retrieved
                     // Recreate the canvas to ensure a clean slate if it was previously destroyed
-                    if (!elements.patternAnalysisChartCanvas.parentNode) { // Check if it's detached
+                    if (!elements.patternAnalysisChartCanvas.parentNode || elements.patternAnalysisChartCanvas.tagName !== 'CANVAS') {
                         const parent = document.getElementById('patternChartContainer');
                         if (parent) {
+                            // Clear existing children to avoid duplicate canvases if previous one was stuck
                             parent.innerHTML = '<h4 class="panel-title" style="font-size: 1.8rem;">Theoretical Bankroll Evolution</h4><canvas id="patternAnalysisChart"></canvas>';
                             elements.patternAnalysisChartCanvas = document.getElementById('patternAnalysisChart');
                         }
-                    } else if (elements.patternAnalysisChartCanvas.tagName !== 'CANVAS') { // If it's something else after innerHTML manipulation
-                         elements.patternAnalysisChartCanvas.remove();
-                         const parent = document.getElementById('patternChartContainer');
-                         if (parent) {
-                             parent.innerHTML = '<h4 class="panel-title" style="font-size: 1.8rem;">Theoretical Bankroll Evolution</h4><canvas id="patternAnalysisChart"></canvas>';
-                             elements.patternAnalysisChartCanvas = document.getElementById('patternAnalysisChart');
-                         }
                     }
 
                     const ctx = elements.patternAnalysisChartCanvas.getContext('2d');
@@ -3165,6 +3207,7 @@
                                     }
                                 },
                                 y: {
+                                    beginAtZero: true,
                                     grid: { color: 'rgba(255, 255, 255, 0.08)' },
                                     ticks: { color: 'var(--text-medium)' },
                                     title: {
@@ -3225,19 +3268,13 @@
                     }
                     
                     // Recreate the canvas to ensure a clean slate
-                    if (!elements.patternOutcomeDistributionChartCanvas.parentNode) { // Check if it's detached
+                    if (!elements.patternOutcomeDistributionChartCanvas.parentNode || elements.patternOutcomeDistributionChartCanvas.tagName !== 'CANVAS') {
                         const parent = document.getElementById('patternOutcomeDistributionChartContainer');
                         if (parent) {
+                            // Clear existing children to avoid duplicate canvases if previous one was stuck
                             parent.innerHTML = '<h4 class="panel-title" style="font-size: 1.8rem;">Pattern Outcome Distribution</h4><canvas id="patternOutcomeDistributionChart"></canvas>';
                             elements.patternOutcomeDistributionChartCanvas = document.getElementById('patternOutcomeDistributionChart');
                         }
-                    } else if (elements.patternOutcomeDistributionChartCanvas.tagName !== 'CANVAS') {
-                         elements.patternOutcomeDistributionChartCanvas.remove();
-                         const parent = document.getElementById('patternOutcomeDistributionChartContainer');
-                         if (parent) {
-                             parent.innerHTML = '<h4 class="panel-title" style="font-size: 1.8rem;">Pattern Outcome Distribution</h4><canvas id="patternOutcomeDistributionChart"></canvas>';
-                             elements.patternOutcomeDistributionChartCanvas = document.getElementById('patternOutcomeDistributionChart');
-                         }
                     }
 
 
@@ -3309,8 +3346,10 @@
                     gameState.patternOutcomeDistributionChartInstance.update();
                     
                     elements.patternOutcomeDistributionChartContainer.classList.remove('hidden');
+                    // Ensure the animation is re-triggered on every update
+                    elements.patternOutcomeDistributionChartContainer.classList.remove('animate__animated', 'animate__fadeIn');
+                    void elements.patternOutcomeDistributionChartContainer.offsetWidth; // Trigger reflow
                     elements.patternOutcomeDistributionChartContainer.classList.add('animate__animated', 'animate__fadeIn');
-                    setTimeout(() => elements.patternOutcomeDistributionChartContainer.classList.remove('animate__fadeIn'), 1000);
                 }
 
 
@@ -3573,12 +3612,15 @@
                         elements.strategyTabs.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
                         elements.tabContents.forEach(content => {
                             content.classList.remove('active');
-                            content.classList.remove('animate__fadeIn'); // Ensure previous fade-in is removed
+                            // Ensure previous fade-in is removed before adding new tab's active class
+                            content.classList.remove('animate__animated', 'animate__fadeIn');
                         });
 
                         event.target.classList.add('active');
                         const activeTabContent = document.getElementById(tabId);
-                        activeTabContent.classList.add('active', 'animate__animated', 'animate__fadeIn'); // Add fade-in animation
+                        // Trigger reflow to restart animation on tab switch
+                        void activeTabContent.offsetWidth;
+                        activeTabContent.classList.add('active', 'animate__animated', 'animate__fadeIn');
                         
                         // Re-initialize chart only for Card Counting tab if not already initialized or is missing
                         if (tabId === 'cardCounting' && (!gameState.chart || !elements.chartArea.querySelector('canvas'))) {
@@ -3596,14 +3638,17 @@
                             updatePatternAnalysis(); // Re-evaluate pattern recommendation
                             initPatternOutcomeDistributionChart(); // Ensure pattern outcome chart is initialized
                             updatePatternOutcomeDistributionChart(); // Update it
+                            // Re-initialize bankroll chart only if progression enabled and not Masaniello
+                            if (gameState.patternBetting.isEnabled && gameState.patternBetting.currentSystem && gameState.currentPatternStrategy !== 'masaniello') {
+                                initPatternAnalysisChart();
+                                updatePatternAnalysisChart();
+                                elements.patternChartContainer.classList.remove('hidden');
+                            } else {
+                                elements.patternChartContainer.classList.add('hidden'); // Hide if not relevant
+                            }
                         } else if (tabId === 'miniGame') {
                             resetMiniGameUI(); // Reset mini-game UI on tab switch
                         }
-
-                        // Remove animation class after it completes to allow re-triggering
-                        setTimeout(() => {
-                            activeTabContent.classList.remove('animate__fadeIn');
-                        }, 1200); // Chart fade-in duration
                     }
                 });
 
@@ -3637,6 +3682,8 @@
                     gameState.patternBetting.isEnabled = this.checked;
                     if (this.checked) {
                         elements.patternBettingControls.classList.remove('hidden');
+                        // Trigger reflow to restart animation
+                        void elements.patternBettingControls.offsetWidth;
                         elements.patternBettingControls.classList.add('animate__animated', 'animate__fadeInDown');
                         
                         if (!gameState.patternBetting.currentSystem) {
@@ -3650,6 +3697,8 @@
                             // Only show if there's actual bankroll history to display, or if it's a fresh start
                             if (gameState.bankrollTimeline.length > 0 || gameState.patternBetting.theoreticalBankroll === 10000) {
                                 elements.patternChartContainer.classList.remove('hidden');
+                                // Trigger reflow to restart animation
+                                void elements.patternChartContainer.offsetWidth;
                                 elements.patternChartContainer.classList.add('animate__animated', 'animate__fadeInUp');
                                 updatePatternAnalysisChart(); // Initialize/update chart
                             }
@@ -3659,7 +3708,7 @@
                         displayMessage('Betting progression enabled.', 'success');
                     } else {
                         elements.patternBettingControls.classList.add('hidden');
-                        elements.patternBettingControls.classList.remove('animate__fadeInDown');
+                        elements.patternBettingControls.classList.remove('animate__fadeInDown'); // Remove the animation class when hiding
                         elements.patternChartContainer.classList.add('hidden'); // Hide chart when disabled
                         resetPatternBettingSystem(true); // Reset all, including selected system
                         displayMessage('Betting progression disabled and reset.', 'info');
@@ -3678,6 +3727,8 @@
                         // Show theoretical bankroll chart if betting is enabled and not Masaniello
                         if (gameState.patternBetting.isEnabled && gameState.currentPatternStrategy !== 'masaniello') {
                             elements.patternChartContainer.classList.remove('hidden');
+                            // Trigger reflow to restart animation
+                            void elements.patternChartContainer.offsetWidth;
                             elements.patternChartContainer.classList.add('animate__animated', 'animate__fadeInUp');
                             updatePatternAnalysisChart();
                         } else {
@@ -3713,7 +3764,9 @@
                         gameState.currentBet.type = this.dataset.betTarget;
                         displayMessage(`Selected to bet on ${gameState.currentBet.type.toUpperCase()}.`, 'info');
                         this.classList.add('animate__animated', 'animate__rubberBand');
-                        setTimeout(() => this.classList.remove('animate__rubberBand'), 1000);
+                        setTimeout(() => {
+                            this.classList.remove('animate__rubberBand');
+                        }, 1000);
                     });
                 });
 
