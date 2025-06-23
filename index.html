@@ -7,8 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
             --primary: #5E35B1; /* Deep Purple */
@@ -782,6 +780,18 @@
             border-color: var(--success);
         }
 
+        .message-box.info { /* Added for informational messages */
+            background-color: rgba(9, 132, 227, 0.3);
+            color: var(--info);
+            border-color: var(--info);
+        }
+
+        .message-box.warning { /* Added for warning messages */
+            background-color: rgba(253, 203, 110, 0.3);
+            color: var(--warning);
+            border-color: var(--warning);
+        }
+
         .message-box.show {
             display: block;
             opacity: 1;
@@ -1358,7 +1368,7 @@
             .stat-box { padding: 1rem; border-radius: 15px; }
             .stat-value { font-size: 1.6rem; }
             .input-controls { grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)); gap: 0.6rem; }
-            .card-btn { padding: 0.8rem 0.4rem; font-size: 1rem; border-radius: 15px; }
+            .card-btn { padding: 0.8rem 0.4rem; font-size: 1.05rem; border-radius: 15px; } /* Slightly larger for visibility */
             .btn-secondary { padding: 0.8rem 1.5rem; font-size: 1.05rem; border-radius: 15px; }
             .history-list { max-height: 140px; padding-right: 0.5rem; }
             .history-item { padding: 0.6rem 0; font-size: 0.9rem; }
@@ -1566,6 +1576,12 @@
                     <!-- Pattern specific analysis will be injected here -->
                 </div>
 
+                <!-- New Chart Container for Pattern Outcome Distribution -->
+                <div id="patternOutcomeDistributionChartContainer" class="hidden mt-6 panel">
+                    <h4 class="panel-title" style="font-size: 1.8rem;">Pattern Outcome Distribution</h4>
+                    <canvas id="patternOutcomeDistributionChart"></canvas>
+                </div>
+
                 <!-- Toggle for Betting Progression -->
                 <div class="switch-container mt-6">
                     <label class="switch">
@@ -1606,9 +1622,15 @@
                             <span class="highlight-bet-label">Next Recommended Bet:</span>
                             <span id="patternNextBetAmount" class="highlight-bet-amount">0 units</span>
                         </p>
+                        <p class="text-sm text-gray-400">Current Theoretical Bankroll: <span id="patternCurrentTheoreticalBankroll">$10,000</span></p>
                         <p class="text-sm text-gray-400">Current Base Bet: <span id="patternCurrentBaseBet"></span></p>
                         <button class="btn-secondary mt-4" id="patternResetBettingBtn">Reset System</button>
                     </div>
+                </div>
+                <!-- Existing Chart Container for Theoretical Bankroll Evolution (visible only with betting progression enabled) -->
+                <div id="patternChartContainer" class="hidden mt-6 panel">
+                    <h4 class="panel-title" style="font-size: 1.8rem;">Theoretical Bankroll Evolution</h4>
+                    <canvas id="patternAnalysisChart"></canvas>
                 </div>
             </div>
         </div>
@@ -1914,6 +1936,9 @@
                         currentCol: 0, // Current position X
                         unitIncrement: 10 // How much each unit represents in betting (e.g., 1 unit = $10)
                     },
+                    patternAnalysisChartInstance: null, // Existing Chart.js instance for theoretical bankroll
+                    bankrollTimeline: [], // Stores {outcomeIndex: number, bankroll: number, actualOutcome: string}
+                    patternOutcomeDistributionChartInstance: null, // NEW Chart.js instance for pattern outcome distribution
                     
                     // Mini-Game State
                     deck: [],
@@ -1951,7 +1976,6 @@
 
                 const elements = {
                     // General UI
-                    // currentBalance: document.getElementById('currentBalance'), // Removed from header
                     roadmap: document.getElementById('roadmap'),
                     chartArea: document.getElementById('chartArea'),
                     messageBox: document.getElementById('messageBox'),
@@ -1985,6 +2009,8 @@
                     patternAnalysisResult: document.getElementById('patternAnalysisResult'),
                     patternBettingControls: document.getElementById('patternBettingControls'),
                     enableBettingProgressionToggle: document.getElementById('enableBettingProgressionToggle'), // New toggle
+                    patternCurrentTheoreticalBankroll: document.getElementById('patternCurrentTheoreticalBankroll'),
+
 
                     // Betting Progression within Pattern Recognition
                     bettingProgressionDropdownBtn: document.getElementById('bettingProgressionDropdownBtn'),
@@ -1997,6 +2023,10 @@
                     patternResetBettingBtn: document.getElementById('patternResetBettingBtn'),
                     betUnitValueInput: document.getElementById('betUnitValueInput'),
                     setBetUnitValueBtn: document.getElementById('setBetUnitValueBtn'),
+                    patternAnalysisChartCanvas: document.getElementById('patternAnalysisChart'),
+                    patternChartContainer: document.getElementById('patternChartContainer'),
+                    patternOutcomeDistributionChartCanvas: document.getElementById('patternOutcomeDistributionChart'), // NEW element
+                    patternOutcomeDistributionChartContainer: document.getElementById('patternOutcomeDistributionChartContainer'), // NEW container
 
                     // Mini-Game Tab Elements
                     miniGameBalanceDisplay: document.getElementById('miniGameBalanceDisplay'), // New element for Mini-Game balance
@@ -2018,10 +2048,16 @@
                 // Display a temporary message
                 function displayMessage(message, type) {
                     elements.messageBox.textContent = message;
-                    elements.messageBox.className = `message-box show ${type}`;
+                    elements.messageBox.className = `message-box show ${type} animate-fade-slide-up`; // Added animation
+
+                    // Hide the message after 3 seconds with fade out
                     setTimeout(() => {
                         elements.messageBox.classList.remove('show');
-                        elements.messageBox.textContent = '';
+                        elements.messageBox.classList.add('animate__fadeOut'); // Animate.css fadeOut
+                        setTimeout(() => {
+                            elements.messageBox.textContent = ''; // Clear text after animation
+                            elements.messageBox.classList.remove('animate__fadeOut');
+                        }, 500); // Duration of fadeOut animation
                     }, 3000);
                 }
 
@@ -2055,13 +2091,13 @@
 
                     if (remaining <= 300) { // 5 minutes or less
                         elements.timeValue.style.color = 'var(--danger)';
-                        timeContainer.classList.add('animate-pulse'); // Using pulse for glow
+                        timeContainer.classList.add('animate__pulse'); // Using pulse for glow
                     } else if (remaining <= 900) { // 15 minutes or less
                         elements.timeValue.style.color = 'var(--warning)';
-                        timeContainer.classList.remove('animate-pulse');
+                        timeContainer.classList.remove('animate__pulse');
                     } else {
                         elements.timeValue.style.color = 'var(--info)';
-                        timeContainer.classList.remove('animate-pulse');
+                        timeContainer.classList.remove('animate__pulse');
                     }
                     return remaining;
                 }
@@ -2079,26 +2115,38 @@
                     authKeyInput.value = gameState.activeKey;
                     timeRemaining.style.display = 'none';
                     authSubmitBtn.disabled = false; // Re-enable auth button
+                    displayMessage('Your session has expired. Please authenticate again.', 'error'); // Notify user
                 }
 
                 // Card counting logic
-                function getNumericalCardValue(cardValue) {
-                    if (cardValue === 'A') return 1;
-                    if (cardValue === '10' || cardValue === 'J' || cardValue === 'Q' || cardValue === 'K') return 0; // Baccarat value, not numerical
-                    return parseInt(cardValue);
-                }
-
+                /**
+                 * Calculates the count contribution of a single card based on specific Baccarat counting rules.
+                 * @param {string} cardValue The card value as a string (e.g., 'A', '2', '10', 'J', 'Q', 'K').
+                 * @returns {number} The numerical count adjustment for the card.
+                 */
                 function getCardCountContribution(cardValue) {
-                    const num = getNumericalCardValue(cardValue);
-                    if (cardValue === 'A') return -1;
-                    if (cardValue === '2' || cardValue === '3') return -1;
-                    if (cardValue === '4' || cardValue === '5') return -5;
-                    if (cardValue === '6' || cardValue === '7') return +5;
-                    if (cardValue === '8' || cardValue === '9') return +1;
-                    if (cardValue === '10' || cardValue === 'J' || cardValue === 'Q' || cardValue === 'K') return 0;
-                    return 0;
+                    switch (cardValue) {
+                        case 'A': return -1;
+                        case '2':
+                        case '3': return -1;
+                        case '4':
+                        case '5': return -5;
+                        case '6':
+                        case '7': return +5;
+                        case '8':
+                        case '9': return +1;
+                        case '10':
+                        case 'J':
+                        case 'Q':
+                        case 'K': return 0; // 10 and Face cards contribute 0
+                        default: return 0; // Fallback for unexpected values
+                    }
                 }
 
+                /**
+                 * Calculates the current running count based on all entered cards.
+                 * @returns {number} The current running count.
+                 */
                 function calculateRunningCount() {
                     let totalCount = 0;
                     gameState.entries.forEach(card => {
@@ -2107,18 +2155,24 @@
                     return totalCount;
                 }
 
+                /**
+                 * Determines the prediction (Banker, Player, Tie, or No Prediction) based on the running count.
+                 * This logic is based on the user's provided script's specific odd/even/zero count rules.
+                 * @returns {{prediction: string, countResult: number}} The prediction and the count result.
+                 */
                 function getPrediction() {
                     const currentCount = calculateRunningCount();
-                    let prediction = "No Prediction";
-                    // Simplified prediction for card counting
-                    if (currentCount > 5) {
-                        prediction = "player"; // Example: high count favors player
-                    } else if (currentCount < -5) {
-                        prediction = "banker"; // Example: low count favors banker
-                    } else if (currentCount >= -5 && currentCount <= 5 && gameState.entries.length > 0) {
-                        prediction = "tie"; // Neutral count, consider tie
-                    } else {
-                        prediction = "no prediction";
+                    if (gameState.entries.length === 0) {
+                        // If no cards entered, show "No Prediction"
+                        return { prediction: "no prediction", countResult: 0 };
+                    }
+                    let prediction = "";
+                    if (currentCount === 0) {
+                        prediction = "tie";
+                    } else if (currentCount % 2 !== 0) { // Odd count
+                        prediction = "banker";
+                    } else { // Even count
+                        prediction = "player";
                     }
                     return { prediction: prediction, countResult: currentCount };
                 }
@@ -2207,19 +2261,22 @@
                         const cell = document.createElement('div');
                         cell.className = `cell flex-shrink-0 animate-pop-in`;
                         cell.textContent = card === '10' ? '10/F' : card;
-                        cell.style.animationDelay = `${index * 0.03}s`; // Faster animation
+                        cell.style.animationDelay = `${index * 0.03}s`; // Staggered animation
 
-                        const predictionResult = getPrediction();
-                        if (index === gameState.entries.length - 1 && predictionResult && predictionResult.prediction !== "no prediction") {
-                            const prediction = predictionResult.prediction;
-                            if (prediction === 'player') {
-                                cell.classList.add('predicted-player');
-                            } else if (prediction === 'banker') {
-                                cell.classList.add('predicted-banker');
-                            } else if (prediction === 'tie') {
-                                cell.classList.add('predicted-tie');
+                        // Only apply prediction styling to the most recently added card's cell
+                        if (index === gameState.entries.length - 1) {
+                            const predictionResult = getPrediction();
+                            if (predictionResult && predictionResult.prediction !== "no prediction") {
+                                const prediction = predictionResult.prediction;
+                                if (prediction === 'player') {
+                                    cell.classList.add('predicted-player');
+                                } else if (prediction === 'banker') {
+                                    cell.classList.add('predicted-banker');
+                                } else if (prediction === 'tie') {
+                                    cell.classList.add('predicted-tie');
+                                }
+                                cell.title = `Card ${index + 1}: ${card} (Current Prediction: ${prediction.toUpperCase()})`;
                             }
-                            cell.title = `Card ${index + 1}: ${card} (Current Prediction: ${prediction.toUpperCase()})`;
                         } else {
                             cell.title = `Card ${index + 1}: ${card}`;
                         }
@@ -2276,6 +2333,18 @@
                     const countResultValueElement = elements.countResultValue;
                     const countDescElement = elements.countDesc;
 
+                    // Apply animations to these elements
+                    recommendationTextElement.classList.remove('animate__animated', 'animate__fadeIn');
+                    countResultValueElement.classList.remove('animate__animated', 'animate__bounceIn');
+                    countDescElement.classList.remove('animate__animated', 'animate__fadeIn');
+                    void recommendationTextElement.offsetWidth; // Trigger reflow
+                    void countResultValueElement.offsetWidth; // Trigger reflow
+                    void countDescElement.offsetWidth; // Trigger reflow
+                    recommendationTextElement.classList.add('animate__animated', 'animate__fadeIn');
+                    countResultValueElement.classList.add('animate__animated', 'animate__bounceIn');
+                    countDescElement.classList.add('animate__animated', 'animate__fadeIn');
+
+
                     if (gameState.entries.length === 0) {
                         recommendationTextElement.textContent = "Enter cards to see prediction";
                         recommendationTextElement.className = "recommendation-text no-bet";
@@ -2297,7 +2366,6 @@
                         betMessage = `No clear prediction yet. (Count: ${countResult})`;
                     }
 
-
                     recommendationTextElement.textContent = betMessage;
                     if (predictionResult.prediction === "no prediction") {
                         recommendationTextElement.className = "recommendation-text no-bet";
@@ -2308,7 +2376,6 @@
                     // Fixed recommended bet for card counter section
                     const recommendedBet = 500; // This value is fixed as per requirement
                     betAmountElement.textContent = `Suggested Bet: $${recommendedBet.toLocaleString()}`;
-
 
                     countResultValueElement.textContent = countResult;
 
@@ -2333,8 +2400,11 @@
                         elements.betRecommendation.classList.remove('animate-glow');
                     }, 2000);
 
-                    // Only add to history if there's a valid prediction (not "no prediction")
-                    if (predictionResult.prediction !== "no prediction") {
+                    // Only add to history if there's a valid prediction (not "no prediction") and it's a new final state
+                    if (predictionResult.prediction !== "no prediction" &&
+                        (gameState.predictionHistory.length === 0 || 
+                        gameState.predictionHistory[gameState.predictionHistory.length - 1].prediction !== predictionResult.prediction ||
+                        gameState.predictionHistory[gameState.predictionHistory.length - 1].countResult !== predictionResult.countResult)) {
                         gameState.predictionHistory.push({
                             prediction: predictionResult.prediction,
                             countResult: predictionResult.countResult,
@@ -2348,6 +2418,7 @@
                 // Add new card entry
                 function addCardEntry(cardValue) {
                     gameState.entries.push(cardValue);
+                    gameState.cardsDealt++; // Increment cards dealt for deck estimation
                     updateStats();
                     updateRoadmap();
                     updateRecommendation();
@@ -2360,20 +2431,21 @@
                     gameState.predictionHistory = [];
                     gameState.cardsDealt = 0;
 
-                    updateRoadmap();
-                    updateChart();
-                    updateStats();
-                    updateHistory();
-
-                    elements.betRecommendation.querySelector('.recommendation-text').textContent = "Enter cards to see prediction";
-                    elements.betRecommendation.querySelector('.recommendation-text').className = "recommendation-text no-bet";
-                    elements.betAmount.textContent = "";
-                    elements.countResultValue.textContent = "0";
-                    elements.countDesc.textContent = "This is the numerical result from the counting system.";
-
                     elements.roadmap.classList.add('animate__fadeOut');
                     elements.chartArea.classList.add('animate__fadeOut');
+                    
                     setTimeout(() => {
+                        updateRoadmap();
+                        updateChart();
+                        updateStats();
+                        updateHistory();
+
+                        elements.betRecommendation.querySelector('.recommendation-text').textContent = "Enter cards to see prediction";
+                        elements.betRecommendation.querySelector('.recommendation-text').className = "recommendation-text no-bet";
+                        elements.betAmount.textContent = "";
+                        elements.countResultValue.textContent = "0";
+                        elements.countDesc.textContent = "This is the numerical result from the counting system.";
+
                         elements.roadmap.classList.remove('animate__fadeOut');
                         elements.chartArea.classList.remove('animate__fadeOut');
                         elements.roadmap.classList.add('animate__fadeIn');
@@ -2382,8 +2454,8 @@
                             elements.roadmap.classList.remove('animate__fadeIn');
                             elements.chartArea.classList.remove('animate__fadeIn');
                         }, 500);
-                    }, 500);
-                    displayMessage('Card Counting data cleared.', 'success');
+                    }, 500); // Wait for fadeOut to complete
+                    displayMessage('Card Counting data cleared.', 'info');
                 }
 
                 // =============================================
@@ -2394,42 +2466,62 @@
                 }
 
                 function selectPatternStrategy(strategy) {
+                    if (gameState.currentPatternStrategy === strategy) {
+                        elements.patternDropdownMenu.classList.remove('show');
+                        return; // Already selected
+                    }
+
                     gameState.currentPatternStrategy = strategy;
                     elements.selectedPatternText.textContent = strategy.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).replace('Pbpbpb', 'PBPBPB').replace('Patternmethod', 'Pattern Method').replace('Dragonpattern', 'Dragon Pattern').replace('Twospattern', 'Two-in-a-row Pattern');
                     elements.patternDropdownMenu.classList.remove('show');
                     
                     elements.patternInputArea.classList.remove('hidden');
-                    elements.patternAnalysisResult.classList.add('hidden');
+                    elements.patternAnalysisResult.classList.add('hidden'); // Hide result until new data
+                    elements.patternAnalysisResult.innerHTML = ''; // Clear previous results
                     
                     gameState.patternHistory = []; // Reset pattern history on strategy change
                     gameState.outcomeCounts = { player: 0, banker: 0, tie: 0 }; // Reset for "Pattern Method"
-                    gameState.currentPatternRecommendation = null;
+                    gameState.currentPatternRecommendation = null; // Reset recommendation on strategy change
 
-                    // Re-initialize Masaniello grid
-                    initMasanielloGrid(); 
-                    updatePatternDetails();
+                    gameState.bankrollTimeline = []; // Clear timeline on strategy change
+                    updatePatternAnalysisChart(); // Update bankroll chart to clear
+                    elements.patternChartContainer.classList.add('hidden'); // Hide bankroll chart initially
+
+                    initMasanielloGrid(); // Re-initialize Masaniello grid state (but not draw until needed)
+                    updatePatternDetails(); // Update details area
+                    
+                    initPatternOutcomeDistributionChart(); // Initialize new chart
+                    updatePatternOutcomeDistributionChart(); // Update new chart immediately
+                    elements.patternOutcomeDistributionChartContainer.classList.remove('hidden'); // Show outcome chart
+
+                    // Animate the pattern recognition section when a strategy is selected
+                    document.getElementById('patternRecognition').classList.add('animate-fade-slide-up');
+                    setTimeout(() => {
+                        document.getElementById('patternRecognition').classList.remove('animate-fade-slide-up');
+                    }, 600);
+                    displayMessage(`Strategy '${elements.selectedPatternText.textContent}' selected.`, 'info');
                 }
 
                 function updatePatternDetails() {
                     let detailsHtml = '';
                     switch (gameState.currentPatternStrategy) {
                         case 'patternMethod':
-                            detailsHtml = `<p>This "Pattern Method" provides an intuitive suggestion for your next bet. It adapts to the flow of the game to guide your decisions.</p>`;
+                            detailsHtml = `<p class="text-medium">This "Pattern Method" provides an intuitive suggestion for your next bet. It adapts to the flow of the game to guide your decisions.</p>`;
                             break;
                         case 'pbpbpbPattern':
-                            detailsHtml = `<p>This strategy looks for a repeating Player-Banker-Player-Banker (PBPBPB) sequence. If identified, it suggests betting on the continuation of this alternating pattern.</p>
+                            detailsHtml = `<p class="text-medium">This strategy looks for a repeating Player-Banker-Player-Banker (PBPBPB) sequence. If identified, it suggests betting on the continuation of this alternating pattern.</p>
                                            <p class="font-semibold mt-4 text-medium">Current Pattern History: <span id="pbpbpbHistory" class="font-normal text-gray-300"></span></p>`;
                             break;
                         case 'dragonPattern':
-                            detailsHtml = `<p>The Dragon Pattern strategy identifies streaks of three or more consecutive Player or Banker wins. It recommends betting on the continuation of the current streak.</p>
+                            detailsHtml = `<p class="text-medium">The Dragon Pattern strategy identifies streaks of three or more consecutive Player or Banker wins. It recommends betting on the continuation of the current streak.</p>
                                            <p class="font-semibold mt-4 text-medium">Current Pattern History: <span id="dragonHistory" class="font-normal text-gray-300"></span></p>`;
                             break;
                         case 'twosPattern':
-                            detailsHtml = `<p>The Two-in-a-row Pattern strategy looks for sequences where an outcome appears twice, then switches (e.g., P P B, B B P). It recommends betting on the next expected outcome in that sequence.</p>
+                            detailsHtml = `<p class="text-medium">The Two-in-a-row Pattern strategy looks for sequences where an outcome appears twice, then switches (e.g., P P B, B B P). It recommends betting on the next expected outcome in that sequence.</p>
                                            <p class="font-semibold mt-4 text-medium">Current Pattern History: <span id="twosHistory" class="font-normal text-gray-300"></span></p>`;
                             break;
                         case 'masaniello':
-                            detailsHtml = `<p>The Masaniello staking plan aims to maximize profit and manage risk within a series of bets. This visualization tracks your progress through the plan based on game outcomes.</p>
+                            detailsHtml = `<p class="text-medium">The Masaniello staking plan aims to maximize profit and manage risk within a series of bets. This visualization tracks your progress through the plan based on game outcomes.</p>
                                            <h4 class="font-semibold mt-4 text-medium">Masaniello Chart</h4>
                                            <p class="text-sm text-gray-500 mt-1">Current Position: [Col <span id="masanielloCurrentCol">${gameState.masanielloState.currentCol}</span>, Row <span id="masanielloCurrentRow">${gameState.masanielloState.currentRow}</span>]</p>
                                            <div class="masaniello-chart-container">
@@ -2447,14 +2539,25 @@
                     elements.patternStrategyDetails.innerHTML = detailsHtml;
                     if (gameState.currentPatternStrategy === 'masaniello') {
                         drawMasanielloGrid();
+                        elements.patternOutcomeDistributionChartContainer.classList.add('hidden'); // Hide outcome distribution chart for Masaniello
+                        elements.patternChartContainer.classList.add('hidden'); // Hide bankroll chart for Masaniello
+                    } else {
+                         elements.patternOutcomeDistributionChartContainer.classList.remove('hidden'); // Show outcome distribution chart for other strategies
+                         updatePatternOutcomeDistributionChart();
+                         if (gameState.patternBetting.isEnabled && gameState.patternBetting.currentSystem) {
+                            elements.patternChartContainer.classList.remove('hidden'); // Show bankroll chart if progression enabled
+                            updatePatternAnalysisChart();
+                         } else {
+                            elements.patternChartContainer.classList.add('hidden'); // Hide bankroll chart
+                         }
                     }
-                    updatePatternAnalysis();
+                    updatePatternAnalysis(); // Update prediction after details are loaded
                 }
 
                 // Masaniello Grid Initialization and Drawing
                 function initMasanielloGrid() {
                     gameState.masanielloState.grid = JSON.parse(JSON.stringify(masanielloGridConfig)); // Deep copy
-                    gameState.masanielloState.currentRow = masanielloGridConfig.length - 1; // Start at bottom row
+                    gameState.masanielloState.currentRow = masanielloGridConfig.length - 1; // Start at bottom row (row 9)
                     gameState.masanielloState.currentCol = 0; // Start at first column
                 }
 
@@ -2487,8 +2590,11 @@
                             gridElement.appendChild(cell);
                         }
                     }
-                    document.getElementById('masanielloCurrentCol').textContent = gameState.masanielloState.currentCol;
-                    document.getElementById('masanielloCurrentRow').textContent = gameState.masanielloState.currentRow;
+                    // Update current position display in text
+                    const currentColSpan = document.getElementById('masanielloCurrentCol');
+                    const currentRowSpan = document.getElementById('masanielloCurrentRow');
+                    if (currentColSpan) currentColSpan.textContent = gameState.masanielloState.currentCol;
+                    if (currentRowSpan) currentRowSpan.textContent = gameState.masanielloState.currentRow;
                 }
 
                 function updateMasanielloPosition(outcome) {
@@ -2496,18 +2602,18 @@
                     const currentCell = masanielloGridConfig[currentRow][currentCol]; // Get data from fixed config
 
                     // Determine if the recorded outcome matches the suggested bet for Masaniello progression
-                    let isWinForMasaniello = false;
+                    let isWinForMasaniello = null; // null for no change, true for win, false for loss
                     if (currentCell.bet === 'player' && outcome === 'player') {
                         isWinForMasaniello = true;
                     } else if (currentCell.bet === 'banker' && outcome === 'banker') {
                         isWinForMasaniello = true;
+                    } else if (currentCell.bet === 'player' && outcome === 'banker') {
+                        isWinForMasaniello = false;
+                    } else if (currentCell.bet === 'banker' && outcome === 'player') {
+                        isWinForMasaniello = false;
                     }
+                    // If currentCell.bet is 'sit-out' or outcome is 'tie', isWinForMasaniello remains null, no position change
 
-                    if (currentCell.bet === 'sit-out' || outcome === 'tie') {
-                        // For sit-out or tie outcomes, Masaniello position typically does not change
-                        isWinForMasaniello = null; // Indicate no change for Masaniello logic
-                    }
-                    
                     if (isWinForMasaniello === true) {
                         // Win: move up one row, stay in current column
                         currentRow = Math.max(0, currentRow - 1); // Row 0 is the top
@@ -2515,9 +2621,9 @@
                         // Loss: move right one column, stay in current row
                         currentCol = Math.min(gridCols - 1, currentCol + 1); // Column 9 is the rightmost
                     }
-                    // Else: isWinForMasaniello is null (tie/sit-out), no position change
+                    // Else: isWinForMasaniello is null (tie/sit-out/unmatched bet), no position change
 
-                    // Handle boundary conditions for Masaniello (ensure positions stay within grid)
+                    // Ensure positions stay within grid boundaries
                     currentRow = Math.max(0, Math.min(gridRows - 1, currentRow));
                     currentCol = Math.max(0, Math.min(gridCols - 1, currentCol));
 
@@ -2531,42 +2637,41 @@
                     gameState.patternHistory.push(outcome);
                     gameState.outcomeCounts[outcome]++; // Update counts for "Pattern Method"
                     displayMessage(`Outcome: ${outcome.toUpperCase()} recorded.`, 'info');
+                    updatePatternOutcomeDistributionChart(); // Update new chart on every outcome
 
-                    let bettingOutcome = null; // Will be 'win', 'loss', or 'push' for betting progression
-                    let impliedBetTarget = null; // What the strategy suggested to bet on for this round
 
+                    let impliedBetTarget = null; // What the strategy suggests to bet on for this round
+
+                    // Determine impliedBetTarget based on the selected pattern strategy
                     switch (gameState.currentPatternStrategy) {
                         case 'patternMethod':
-                            const patternMethodRec = getPatternMethodPrediction(); // Get prediction based on frequency
-                            gameState.currentPatternRecommendation = patternMethodRec;
-                            impliedBetTarget = patternMethodRec;
+                            impliedBetTarget = getPatternMethodPrediction();
                             break;
                         case 'pbpbpbPattern':
-                            const pbpbRec = getPBPBPBRecommendation();
-                            gameState.currentPatternRecommendation = pbpbRec;
-                            impliedBetTarget = pbpbRec;
+                            impliedBetTarget = getPBPBPBRecommendation();
                             break;
                         case 'dragonPattern':
-                            const dragonRec = getDragonRecommendation();
-                            gameState.currentPatternRecommendation = dragonRec;
-                            impliedBetTarget = dragonRec;
+                            impliedBetTarget = getDragonRecommendation();
                             break;
                         case 'twosPattern':
-                            const twosRec = getTwosPatternRecommendation();
-                            gameState.currentPatternRecommendation = twosRec;
-                            impliedBetTarget = twosRec;
+                            impliedBetTarget = getTwosPatternRecommendation();
                             break;
                         case 'masaniello':
                             updateMasanielloPosition(outcome); // Update Masaniello grid position
                             const currentMasanielloCell = masanielloGridConfig[gameState.masanielloState.currentRow][gameState.masanielloState.currentCol];
-                            gameState.currentPatternRecommendation = currentMasanielloCell.bet; // Recommendation from Masaniello chart
-                            impliedBetTarget = currentMasanielloCell.bet;
+                            impliedBetTarget = currentMasanielloCell.bet; // Recommendation from Masaniello chart
                             break;
                     }
+                    // Crucial fix: Update the global pattern recommendation state
+                    gameState.currentPatternRecommendation = impliedBetTarget;
+                    
+                    let bettingOutcome = null; // Will be 'win', 'loss', or 'push' for betting progression
                     
                     // Determine win/loss/push for betting progression based on implied bet target
-                    if (impliedBetTarget === 'sit-out' || outcome === 'tie') {
-                        // If strategy suggested 'sit-out' OR the actual outcome was 'tie'
+                    if (outcome === 'tie') { // Actual outcome was a Tie
+                        bettingOutcome = 'push'; // A tie usually results in a push for Player/Banker bets
+                    } else if (impliedBetTarget === 'sit-out' || impliedBetTarget === 'no_clear_pattern') {
+                        // If strategy suggested 'sit-out' or there was no clear pattern, it's a push for betting purposes.
                         bettingOutcome = 'push';
                     } else if (impliedBetTarget === outcome) {
                         bettingOutcome = 'win';
@@ -2576,15 +2681,30 @@
 
                     updatePatternAnalysis(); // Update pattern-specific analysis display
 
-                    // Automatically apply betting progression ONLY if enabled
+                    // Automatically apply betting progression ONLY if enabled and a system is selected
                     if (gameState.patternBetting.isEnabled && gameState.patternBetting.currentSystem && bettingOutcome) {
-                        if (bettingOutcome === 'push') {
-                            displayMessage('Betting progression: Push (no change).', 'info');
-                        } else {
-                            // Call the function that updates the theoretical bankroll for Pattern Recognition
+                         // Only update bankroll if it's a definite win or loss, not a push
+                        if (bettingOutcome === 'win' || bettingOutcome === 'loss') {
                             updateTheoreticalBankroll(bettingOutcome, impliedBetTarget);
+                            // Store data for chart after bankroll update
+                            gameState.bankrollTimeline.push({
+                                outcomeIndex: gameState.patternHistory.length, // Current number of outcomes
+                                bankroll: gameState.patternBetting.theoreticalBankroll,
+                                actualOutcome: outcome
+                            });
+                            updatePatternAnalysisChart();
+                        } else {
+                            displayMessage('Betting progression: Push (no change).', 'info');
+                            // Still store push to timeline to reflect time progression
+                            gameState.bankrollTimeline.push({
+                                outcomeIndex: gameState.patternHistory.length,
+                                bankroll: gameState.patternBetting.theoreticalBankroll, // Bankroll doesn't change on push
+                                actualOutcome: outcome
+                            });
+                            updatePatternAnalysisChart();
+                            updatePatternNextBetDisplay(); // Ensure next bet is updated even on push
                         }
-                    } else if (gameState.patternBetting.isEnabled && (gameState.currentPatternStrategy === 'patternMethod' || gameState.currentPatternStrategy === 'masaniello' || gameState.currentPatternStrategy === 'dragonPattern' || gameState.currentPatternStrategy === 'twosPattern' || gameState.currentPatternStrategy === 'pbpbpbPattern') && !gameState.patternBetting.currentSystem) {
+                    } else if (gameState.patternBetting.isEnabled && !gameState.patternBetting.currentSystem) {
                         displayMessage('Select a betting progression system to apply it automatically!', 'warning');
                     }
                 }
@@ -2592,7 +2712,7 @@
                 // Logic for "Pattern Method" prediction based on last 15 outcomes.
                 function getPatternMethodPrediction() {
                     const recentHistory = gameState.patternHistory.slice(-15); // Look at last 15 outcomes
-                    if (recentHistory.length === 0) return 'sit-out'; // No history, sit out
+                    if (recentHistory.length === 0) return 'no_clear_pattern'; // No history, sit out
 
                     const counts = { player: 0, banker: 0, tie: 0 };
                     recentHistory.forEach(outcome => {
@@ -2619,7 +2739,7 @@
                     const lastOutcome = gameState.patternHistory[historyLength - 1];
                     const secondLastOutcome = gameState.patternHistory[historyLength - 2];
 
-                    if (lastOutcome !== secondLastOutcome) { // Alternating pattern
+                    if (lastOutcome !== secondLastOutcome && lastOutcome !== 'tie' && secondLastOutcome !== 'tie') { // Alternating pattern (excluding ties for clarity)
                         return lastOutcome === 'player' ? 'banker' : 'player'; // Suggest opposite of last
                     }
                     return 'no_clear_pattern';
@@ -2661,7 +2781,10 @@
                 function updatePatternAnalysis() {
                     const resultDiv = elements.patternAnalysisResult;
                     resultDiv.classList.remove('hidden');
-                    resultDiv.innerHTML = '';
+                    resultDiv.classList.add('animate__animated', 'animate__fadeIn'); // Animate result in
+                    setTimeout(() => resultDiv.classList.remove('animate__fadeIn'), 800); // Remove animation class
+
+                    resultDiv.innerHTML = ''; // Clear previous content
 
                     let recommendationText = '';
                     if (gameState.patternHistory.length === 0) {
@@ -2669,22 +2792,22 @@
                         return;
                     }
 
+                    let currentRecommendation = gameState.currentPatternRecommendation;
+
                     switch (gameState.currentPatternStrategy) {
                         case 'patternMethod':
-                            const patternMethodRec = getPatternMethodPrediction();
-                            if (patternMethodRec !== 'sit-out') {
-                                recommendationText = `Next recommended bet: <span class="text-success font-bold">${patternMethodRec.toUpperCase()}</span>`;
+                            if (currentRecommendation && currentRecommendation !== 'no_clear_pattern') {
+                                recommendationText = `Next recommended bet: <span class="text-success font-bold">${currentRecommendation.toUpperCase()}</span>`;
                             } else {
-                                recommendationText = `Recommendation: <span class="text-danger font-bold">SIT OUT</span> (No outcomes recorded)`;
+                                recommendationText = `Recommendation: <span class="text-danger font-bold">NO CLEAR BET</span>`;
                             }
                             resultDiv.innerHTML = `<p class="text-info mt-2">${recommendationText}</p>
                                                    <p class="text-sm text-gray-500 mt-2">Based on analysis of recent trends.</p>`;
                             break;
                         case 'pbpbpbPattern':
-                            document.getElementById('pbpbpbHistory').textContent = gameState.patternHistory.map(h => h.toUpperCase()).join(', ');
-                            const pbpbRec = getPBPBPBRecommendation();
-                            if (pbpbRec && pbpbRec !== 'no_clear_pattern') {
-                                recommendationText = `Next recommended bet: <span class="text-success font-bold">${pbpbRec.toUpperCase()}</span> (following PBPBPB)`;
+                            if(document.getElementById('pbpbpbHistory')) document.getElementById('pbpbpbHistory').textContent = gameState.patternHistory.map(h => h.toUpperCase()).join(', ');
+                            if (currentRecommendation && currentRecommendation !== 'no_clear_pattern') {
+                                recommendationText = `Next recommended bet: <span class="text-success font-bold">${currentRecommendation.toUpperCase()}</span> (following PBPBPB)`;
                             } else {
                                 recommendationText = `No clear PBPBPB pattern observed yet.`;
                             }
@@ -2695,10 +2818,9 @@
                                             </div>`;
                             break;
                         case 'dragonPattern':
-                            document.getElementById('dragonHistory').textContent = gameState.patternHistory.map(h => h.toUpperCase()).join(', ');
-                            const dragonRec = getDragonRecommendation();
-                            if (dragonRec && dragonRec !== 'no_clear_pattern') {
-                                recommendationText = `Next recommended bet: <span class="text-success font-bold">${dragonRec.toUpperCase()}</span> (following Dragon)`;
+                            if(document.getElementById('dragonHistory')) document.getElementById('dragonHistory').textContent = gameState.patternHistory.map(h => h.toUpperCase()).join(', ');
+                            if (currentRecommendation && currentRecommendation !== 'no_clear_pattern') {
+                                recommendationText = `Next recommended bet: <span class="text-success font-bold">${currentRecommendation.toUpperCase()}</span> (following Dragon)`;
                             } else {
                                 recommendationText = `No clear Dragon pattern (streak of 3+) observed yet.`;
                             }
@@ -2709,10 +2831,9 @@
                                             </div>`;
                             break;
                         case 'twosPattern':
-                            document.getElementById('twosHistory').textContent = gameState.patternHistory.map(h => h.toUpperCase()).join(', ');
-                            const twosRec = getTwosPatternRecommendation();
-                            if (twosRec && twosRec !== 'no_clear_pattern') {
-                                recommendationText = `Next recommended bet: <span class="text-success font-bold">${twosRec.toUpperCase()}</span> (following Two-in-a-row)`;
+                            if(document.getElementById('twosHistory')) document.getElementById('twosHistory').textContent = gameState.patternHistory.map(h => h.toUpperCase()).join(', ');
+                            if (currentRecommendation && currentRecommendation !== 'no_clear_pattern') {
+                                recommendationText = `Next recommended bet: <span class="text-success font-bold">${currentRecommendation.toUpperCase()}</span> (following Two-in-a-row)`;
                             } else {
                                 recommendationText = `No clear Two-in-a-row pattern observed yet.`;
                             }
@@ -2747,10 +2868,18 @@
                     gameState.currentPatternRecommendation = null;
                     displayMessage('Pattern history cleared.', 'success');
                     
-                    initMasanielloGrid(); // Reset Masaniello state
-                    updatePatternAnalysis();
+                    initMasanielloGrid(); // Reset Masaniello state to start
+                    updatePatternDetails(); // Re-render details to reflect cleared state
+                    updatePatternOutcomeDistributionChart(); // Clear outcome distribution chart
+
+                    elements.patternAnalysisResult.classList.add('hidden'); // Hide result until new data
+                    elements.patternAnalysisResult.innerHTML = ''; // Clear previous results
                     
                     resetPatternBettingSystem(); // Reset betting progression state
+                    elements.clearPatternBtn.classList.add('animate__shakeX');
+                    setTimeout(() => {
+                        elements.clearPatternBtn.classList.remove('animate__shakeX');
+                    }, 1000);
                 }
 
 
@@ -2758,35 +2887,40 @@
                 // Betting Systems Functions (moved to Pattern Recognition context)
                 // =============================================
                 function selectPatternBettingSystem(system) {
+                    if (gameState.patternBetting.currentSystem === system) {
+                        elements.bettingProgressionDropdownMenu.classList.remove('show');
+                        return; // Already selected
+                    }
                     gameState.patternBetting.currentSystem = system;
                     elements.selectedBettingProgressionText.textContent = system.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                     elements.bettingProgressionDropdownMenu.classList.remove('show');
                     
                     elements.patternBettingInputArea.classList.remove('hidden');
                     updatePatternBettingSystemDetails();
-                    resetPatternBettingSystem(); // Reset state when a new system is selected
+                    resetPatternBettingSystem(false); // Reset state but don't reset selected system
+                    displayMessage(`Betting system '${elements.selectedBettingProgressionText.textContent}' selected.`, 'info');
                 }
 
                 function updatePatternBettingSystemDetails() {
                     let detailsHtml = '';
                     switch (gameState.patternBetting.currentSystem) {
                         case 'flatBetting':
-                            detailsHtml = `<p>Flat betting involves placing the same amount of units on every wager, regardless of wins or losses. It's a low-risk strategy focused on consistency.</p>
+                            detailsHtml = `<p class="text-medium">Flat betting involves placing the same amount of units on every wager, regardless of wins or losses. It's a low-risk strategy focused on consistency.</p>
                                            <p class="mt-2">Set your base bet in units:</p>
                                            <input type="number" id="patternFlatBetInput" class="strategy-input mt-2" value="${gameState.patternBetting.flatBetAmount}" min="1">
                                            <button class="strategy-btn mt-4" id="setPatternFlatBetBtn">Set Flat Bet (Units)</button>`;
                             break;
                         case 'martingale':
-                            detailsHtml = `<p>The Martingale system involves doubling your bet units after every loss, aiming to recover all previous losses with a single win. Risky, requires large bankroll.</p>
-                                           <p>Starting bet: ${gameState.patternBetting.martingaleBet} units. Next bet will adjust based on outcome.</p>`;
+                            detailsHtml = `<p class="text-medium">The Martingale system involves doubling your bet units after every loss, aiming to recover all previous losses with a single win. Risky, requires large bankroll.</p>
+                                           <p class="text-warning mt-2">Starting bet: ${gameState.patternBetting.martingaleBet} units. Next bet will adjust based on outcome.</p>`;
                             break;
                         case 'dalembert':
-                            detailsHtml = `<p>D'Alembert system involves increasing your bet by one unit after a loss and decreasing by one unit after a win. Less aggressive than Martingale.</p>
-                                           <p>Starting bet: ${gameState.patternBetting.dalembertBet} units. Next bet will adjust based on outcome.</p>`;
+                            detailsHtml = `<p class="text-medium">D'Alembert system involves increasing your bet by one unit after a loss and decreasing by one unit after a win. Less aggressive than Martingale.</p>
+                                           <p class="text-warning mt-2">Starting bet: ${gameState.patternBetting.dalembertBet} units. Next bet will adjust based on outcome.</p>`;
                             break;
                         case 'fibonacci':
-                            detailsHtml = `<p>Fibonacci system uses the Fibonacci sequence (1, 1, 2, 3, 5, 8...) where the next bet is the sum of the previous two. Move up the sequence on loss, back two on win.</p>
-                                           <p>Current Fibonacci Index: ${gameState.patternBetting.fibonacciIndex}. Next bet will adjust based on outcome.</p>`;
+                            detailsHtml = `<p class="text-medium">Fibonacci system uses the Fibonacci sequence (1, 1, 2, 3, 5, 8...) where the next bet is the sum of the previous two. Move up the sequence on loss, back two on win.</p>
+                                           <p class="text-warning mt-2">Current Fibonacci Index: ${gameState.patternBetting.fibonacciIndex}. Next bet will adjust based on outcome.</p>`;
                             break;
                         default:
                             detailsHtml = `<p class="text-center text-gray-400">Choose a betting system from the dropdown above to see its description and controls.</p>`;
@@ -2808,34 +2942,36 @@
                     updatePatternNextBetDisplay();
                 }
 
-                function updateTheoreticalBankroll(outcomeWinLossPush, impliedBetTarget) { // outcomeWinLossPush will be 'win', 'loss'
+                function updateTheoreticalBankroll(outcomeWinLoss, impliedBetTarget) { // outcomeWinLoss will be 'win', 'loss'
                     let betUnits = 0;
-                    let message = '';
                     const pb = gameState.patternBetting; // Shorthand for patternBetting
 
                     // Get the number of units that *would have been* bet for the current progression step
-                    let currentBetDisplayUnits = 0;
+                    let currentBetUnitsForCalc = 0;
                      switch (pb.currentSystem) {
-                        case 'flatBetting': currentBetDisplayUnits = pb.flatBetAmount; break;
-                        case 'martingale': currentBetDisplayUnits = pb.martingaleBet; break;
-                        case 'dalembert': currentBetDisplayUnits = pb.dalembertBet; break;
-                        case 'fibonacci': currentBetDisplayUnits = pb.fibonacciSequence[pb.fibonacciIndex]; break;
+                        case 'flatBetting': currentBetUnitsForCalc = pb.flatBetAmount; break;
+                        case 'martingale': currentBetUnitsForCalc = pb.martingaleBet; break;
+                        case 'dalembert': currentBetUnitsForCalc = pb.dalembertBet; break;
+                        case 'fibonacci': currentBetUnitsForCalc = pb.fibonacciSequence[pb.fibonacciIndex]; break;
                         case 'masaniello':
                             const currentMasanielloCell = masanielloGridConfig[gameState.masanielloState.currentRow][gameState.masanielloState.currentCol];
-                            currentBetDisplayUnits = currentMasanielloCell.value;
+                            currentBetUnitsForCalc = currentMasanielloCell.value;
                             break;
+                        default:
+                            currentBetUnitsForCalc = 0;
                     }
                     
                     // Convert units to dollars for actual balance calculation
-                    const betAmountDollars = currentBetDisplayUnits * pb.bettingUnitValue;
+                    const betAmountDollars = currentBetUnitsForCalc * pb.bettingUnitValue;
 
-                    if (betAmountDollars > pb.theoreticalBankroll && outcomeWinLossPush === 'loss') { // Only trigger if loss would exceed bankroll
-                        displayMessage(`Theoretical bankroll ($${pb.theoreticalBankroll.toLocaleString()}) insufficient for next ${currentBetDisplayUnits} unit bet ($${betAmountDollars.toFixed(2)}). Resetting betting system.`, 'error');
-                        resetPatternBettingSystem();
+                    // Prevent negative bankroll if a loss would exceed it
+                    if (pb.theoreticalBankroll - betAmountDollars < 0 && outcomeWinLoss === 'loss') {
+                        displayMessage(`Theoretical bankroll ($${pb.theoreticalBankroll.toLocaleString()}) insufficient for next $${betAmountDollars.toFixed(2)} bet. Resetting betting system.`, 'error');
+                        resetPatternBettingSystem(true); // Reset all, including selected system
                         return;
                     }
 
-                    if (outcomeWinLossPush === 'win') {
+                    if (outcomeWinLoss === 'win') {
                         let winAmountDollars = betAmountDollars;
                         // Apply commission for Banker wins when betting on Banker (theoretical)
                         if (impliedBetTarget === 'banker') {
@@ -2844,7 +2980,7 @@
                             winAmountDollars = betAmountDollars * 8;
                         }
                         pb.theoreticalBankroll += winAmountDollars;
-                        message = `Theoretical WIN of $${winAmountDollars.toFixed(2)}. Theoretical Bankroll: $${pb.theoreticalBankroll.toLocaleString()}.`;
+                        displayMessage(`Theoretical WIN of $${winAmountDollars.toFixed(2)}.`, 'success');
                         
                         // Apply specific progression rules for a win (in units)
                         switch (pb.currentSystem) {
@@ -2853,9 +2989,9 @@
                             case 'fibonacci': pb.fibonacciIndex = Math.max(0, pb.fibonacciIndex - 2); break;
                         }
 
-                    } else { // outcomeWinLossPush is 'loss'
+                    } else { // outcomeWinLoss is 'loss'
                         pb.theoreticalBankroll -= betAmountDollars; // Lose the full dollar amount
-                        message = `Theoretical LOSS of $${betAmountDollars.toFixed(2)}. Theoretical Bankroll: $${pb.theoreticalBankroll.toLocaleString()}.`;
+                        displayMessage(`Theoretical LOSS of $${betAmountDollars.toFixed(2)}.`, 'error');
 
                         // Apply specific progression rules for a loss (in units)
                         switch (pb.currentSystem) {
@@ -2870,7 +3006,6 @@
                                 break;
                         }
                     }
-                    displayMessage(message, outcomeWinLossPush === 'win' ? 'success' : 'error');
                     updatePatternNextBetDisplay(); // Update display after state change
                 }
 
@@ -2882,30 +3017,31 @@
                     if (!pb.currentSystem) { // Check if a system is selected
                         elements.patternNextBetAmount.textContent = '0 units';
                         elements.patternCurrentBaseBet.textContent = 'N/A';
+                        elements.patternCurrentTheoreticalBankroll.textContent = `$${pb.theoreticalBankroll.toLocaleString()}`;
                         return;
                     }
 
                     switch (pb.currentSystem) {
                         case 'flatBetting':
                             nextBetUnits = pb.flatBetAmount;
-                            currentBaseInfo = `Base: ${pb.flatBetAmount} units (Theoretical Bankroll: $${pb.theoreticalBankroll.toLocaleString()})`;
+                            currentBaseInfo = `Base: ${pb.flatBetAmount} units`;
                             break;
                         case 'martingale':
                             nextBetUnits = pb.martingaleBet;
-                            currentBaseInfo = `Current Bet: ${pb.martingaleBet} units (Theoretical Bankroll: $${pb.theoreticalBankroll.toLocaleString()})`;
+                            currentBaseInfo = `Current Bet: ${pb.martingaleBet} units`;
                             break;
                         case 'dalembert':
                             nextBetUnits = pb.dalembertBet;
-                            currentBaseInfo = `Current Bet: ${pb.dalembertBet} units (Theoretical Bankroll: $${pb.theoreticalBankroll.toLocaleString()})`;
+                            currentBaseInfo = `Current Bet: ${pb.dalembertBet} units`;
                             break;
                         case 'fibonacci':
                             nextBetUnits = pb.fibonacciSequence[pb.fibonacciIndex];
-                            currentBaseInfo = `Current Index: ${pb.fibonacciIndex} (Theoretical Bankroll: $${pb.theoreticalBankroll.toLocaleString()})`;
+                            currentBaseInfo = `Current Index: ${pb.fibonacciIndex}`;
                             break;
                         case 'masaniello': // Masaniello uses its own current position for suggested bet units
                             const currentMasanielloCell = masanielloGridConfig[gameState.masanielloState.currentRow][gameState.masanielloState.currentCol];
                             nextBetUnits = currentMasanielloCell.value;
-                            currentBaseInfo = `Unit Value: $${gameState.masanielloState.unitIncrement} (Theoretical Bankroll: $${pb.theoreticalBankroll.toLocaleString()})`; // Masaniello units directly map to its own config
+                            currentBaseInfo = `Unit Value: $${gameState.masanielloState.unitIncrement}`; // Masaniello units directly map to its own config
                             break;
                         default:
                             nextBetUnits = 0;
@@ -2913,11 +3049,14 @@
                     }
                     elements.patternNextBetAmount.textContent = `${nextBetUnits.toLocaleString()} units`;
                     elements.patternCurrentBaseBet.textContent = currentBaseInfo;
+                    elements.patternCurrentTheoreticalBankroll.textContent = `$${pb.theoreticalBankroll.toLocaleString()}`; // Always update bankroll display
                 }
 
-                function resetPatternBettingSystem() {
-                    gameState.patternBetting.currentSystem = null; // Also reset selected system in dropdown
-                    elements.selectedBettingProgressionText.textContent = 'Select System';
+                function resetPatternBettingSystem(resetSelectedSystem = true) {
+                    if (resetSelectedSystem) {
+                        gameState.patternBetting.currentSystem = null; // Also reset selected system in dropdown
+                        elements.selectedBettingProgressionText.textContent = 'Select System';
+                    }
 
                     gameState.patternBetting.martingaleBet = 1; // Reset to 1 unit
                     gameState.patternBetting.dalembertBet = 1; // Reset to 1 unit
@@ -2925,6 +3064,10 @@
                     gameState.patternBetting.fibonacciIndex = 0;
                     gameState.patternBetting.flatBetAmount = 1; // Reset to 1 unit
                     gameState.patternBetting.theoreticalBankroll = 10000; // Reset theoretical bankroll
+
+                    gameState.bankrollTimeline = []; // Clear chart data
+                    updatePatternAnalysisChart(); // Update chart to clear it visually
+                    elements.patternChartContainer.classList.add('hidden'); // Hide chart if no data
 
                     // Update the flat bet input if it's currently visible
                     const flatBetInput = document.getElementById('patternFlatBetInput');
@@ -2938,6 +3081,238 @@
                     updatePatternNextBetDisplay(); // Update display with new unit value (will show 0 units)
                     displayMessage('Betting system reset to base units. Theoretical bankroll reset.', 'info');
                 }
+
+                function initPatternAnalysisChart() {
+                    if (gameState.patternAnalysisChartInstance) {
+                        gameState.patternAnalysisChartInstance.destroy();
+                    }
+                    // Ensure the canvas context is properly retrieved
+                    // Recreate the canvas to ensure a clean slate if it was previously destroyed
+                    if (!elements.patternAnalysisChartCanvas.parentNode) { // Check if it's detached
+                        const parent = document.getElementById('patternChartContainer');
+                        if (parent) {
+                            parent.innerHTML = '<h4 class="panel-title" style="font-size: 1.8rem;">Theoretical Bankroll Evolution</h4><canvas id="patternAnalysisChart"></canvas>';
+                            elements.patternAnalysisChartCanvas = document.getElementById('patternAnalysisChart');
+                        }
+                    } else if (elements.patternAnalysisChartCanvas.tagName !== 'CANVAS') { // If it's something else after innerHTML manipulation
+                         elements.patternAnalysisChartCanvas.remove();
+                         const parent = document.getElementById('patternChartContainer');
+                         if (parent) {
+                             parent.innerHTML = '<h4 class="panel-title" style="font-size: 1.8rem;">Theoretical Bankroll Evolution</h4><canvas id="patternAnalysisChart"></canvas>';
+                             elements.patternAnalysisChartCanvas = document.getElementById('patternAnalysisChart');
+                         }
+                    }
+
+                    const ctx = elements.patternAnalysisChartCanvas.getContext('2d');
+                    if (!ctx) return; // Exit if context is not available
+
+                    const style = getComputedStyle(document.documentElement);
+                    const successColor = style.getPropertyValue('--success').trim();
+                    const dangerColor = style.getPropertyValue('--danger').trim();
+                    const warningColor = style.getPropertyValue('--warning').trim(); 
+
+                    gameState.patternAnalysisChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: [], // Outcome index
+                            datasets: [{
+                                label: 'Theoretical Bankroll',
+                                data: [],
+                                borderColor: successColor, // Initial color
+                                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                fill: true,
+                                tension: 0.3,
+                                pointRadius: 5,
+                                pointBackgroundColor: successColor,
+                                pointBorderColor: '#fff',
+                                pointHoverRadius: 7,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    labels: {
+                                        color: 'var(--light)',
+                                        font: { size: 14 }
+                                    }
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        title: function(context) {
+                                            return `Outcome #${context[0].dataIndex + 1}`;
+                                        },
+                                        label: function(context) {
+                                            const dataPoint = gameState.bankrollTimeline[context.dataIndex];
+                                            return `Bankroll: $${dataPoint.bankroll.toLocaleString()} (Outcome: ${dataPoint.actualOutcome.toUpperCase()})`;
+                                        },
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                                    ticks: { color: 'var(--text-medium)' },
+                                    title: {
+                                        display: true,
+                                        text: 'Outcome Number',
+                                        color: 'var(--text-medium)',
+                                        font: { size: 16 }
+                                    }
+                                },
+                                y: {
+                                    grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                                    ticks: { color: 'var(--text-medium)' },
+                                    title: {
+                                        display: true,
+                                        text: 'Bankroll ($)',
+                                        color: 'var(--text-medium)',
+                                        font: { size: 16 }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                function updatePatternAnalysisChart() {
+                    if (!gameState.patternAnalysisChartInstance) {
+                        initPatternAnalysisChart(); // Initialize if not already
+                    }
+                    if (!gameState.patternAnalysisChartInstance) return; // Still return if init fails
+
+                    const labels = gameState.bankrollTimeline.map((_, i) => `${i + 1}`);
+                    const data = gameState.bankrollTimeline.map(point => point.bankroll);
+
+                    gameState.patternAnalysisChartInstance.data.labels = labels;
+                    gameState.patternAnalysisChartInstance.data.datasets[0].data = data;
+
+                    if (gameState.bankrollTimeline.length > 0) {
+                        const lastBankroll = gameState.bankrollTimeline[gameState.bankrollTimeline.length - 1].bankroll;
+                        const initialBankroll = gameState.bankrollTimeline[0] ? gameState.bankrollTimeline[0].bankroll : 10000;
+
+                        const style = getComputedStyle(document.documentElement);
+                        const successColor = style.getPropertyValue('--success').trim();
+                        const dangerColor = style.getPropertyValue('--danger').trim();
+                        const warningColor = style.getPropertyValue('--warning').trim();
+
+                        if (lastBankroll > initialBankroll) {
+                            gameState.patternAnalysisChartInstance.data.datasets[0].borderColor = successColor;
+                            gameState.patternAnalysisChartInstance.data.datasets[0].pointBackgroundColor = successColor;
+                        } else if (lastBankroll < initialBankroll) {
+                            gameState.patternAnalysisChartInstance.data.datasets[0].borderColor = dangerColor;
+                            gameState.patternAnalysisChartInstance.data.datasets[0].pointBackgroundColor = dangerColor;
+                        } else {
+                            gameState.patternAnalysisChartInstance.data.datasets[0].borderColor = warningColor;
+                            gameState.patternAnalysisChartInstance.data.datasets[0].pointBackgroundColor = warningColor;
+                        }
+                    }
+
+                    gameState.patternAnalysisChartInstance.update();
+                    // elements.patternChartContainer.classList.remove('hidden'); // Managed by toggle now
+                    // elements.patternChartContainer.classList.add('animate__animated', 'animate__fadeIn');
+                    // setTimeout(() => elements.patternChartContainer.classList.remove('animate__fadeIn'), 1000);
+                }
+
+                // NEW: Pattern Outcome Distribution Chart
+                function initPatternOutcomeDistributionChart() {
+                    if (gameState.patternOutcomeDistributionChartInstance) {
+                        gameState.patternOutcomeDistributionChartInstance.destroy();
+                    }
+                    
+                    // Recreate the canvas to ensure a clean slate
+                    if (!elements.patternOutcomeDistributionChartCanvas.parentNode) { // Check if it's detached
+                        const parent = document.getElementById('patternOutcomeDistributionChartContainer');
+                        if (parent) {
+                            parent.innerHTML = '<h4 class="panel-title" style="font-size: 1.8rem;">Pattern Outcome Distribution</h4><canvas id="patternOutcomeDistributionChart"></canvas>';
+                            elements.patternOutcomeDistributionChartCanvas = document.getElementById('patternOutcomeDistributionChart');
+                        }
+                    } else if (elements.patternOutcomeDistributionChartCanvas.tagName !== 'CANVAS') {
+                         elements.patternOutcomeDistributionChartCanvas.remove();
+                         const parent = document.getElementById('patternOutcomeDistributionChartContainer');
+                         if (parent) {
+                             parent.innerHTML = '<h4 class="panel-title" style="font-size: 1.8rem;">Pattern Outcome Distribution</h4><canvas id="patternOutcomeDistributionChart"></canvas>';
+                             elements.patternOutcomeDistributionChartCanvas = document.getElementById('patternOutcomeDistributionChart');
+                         }
+                    }
+
+
+                    const ctx = elements.patternOutcomeDistributionChartCanvas.getContext('2d');
+                    if (!ctx) return; // Exit if context is not available
+
+                    const style = getComputedStyle(document.documentElement);
+                    const infoColor = style.getPropertyValue('--info').trim();
+                    const dangerColor = style.getPropertyValue('--danger').trim();
+                    const warningColor = style.getPropertyValue('--warning').trim();
+
+                    gameState.patternOutcomeDistributionChartInstance = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Player', 'Banker', 'Tie'],
+                            datasets: [{
+                                label: 'Outcome Count',
+                                data: [0, 0, 0], // Initial data
+                                backgroundColor: [infoColor, dangerColor, warningColor],
+                                borderColor: ['#fff', '#fff', '#fff'],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false // No legend needed for single dataset bar chart
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `${context.label}: ${context.raw}`;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: { display: false },
+                                    ticks: { color: 'var(--light)' }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                    ticks: { color: 'var(--light)', precision: 0 }
+                                }
+                            },
+                            animation: {
+                                duration: 800,
+                                easing: 'easeOutQuart'
+                            }
+                        }
+                    });
+                }
+
+                function updatePatternOutcomeDistributionChart() {
+                    if (!gameState.patternOutcomeDistributionChartInstance) {
+                        initPatternOutcomeDistributionChart();
+                    }
+                    if (!gameState.patternOutcomeDistributionChartInstance) return; // Still return if init fails
+
+                    const playerCounts = gameState.patternHistory.filter(o => o === 'player').length;
+                    const bankerCounts = gameState.patternHistory.filter(o => o === 'banker').length;
+                    const tieCounts = gameState.patternHistory.filter(o => o === 'tie').length;
+
+                    gameState.patternOutcomeDistributionChartInstance.data.datasets[0].data = [playerCounts, bankerCounts, tieCounts];
+                    gameState.patternOutcomeDistributionChartInstance.update();
+                    
+                    elements.patternOutcomeDistributionChartContainer.classList.remove('hidden');
+                    elements.patternOutcomeDistributionChartContainer.classList.add('animate__animated', 'animate__fadeIn');
+                    setTimeout(() => elements.patternOutcomeDistributionChartContainer.classList.remove('animate__fadeIn'), 1000);
+                }
+
 
                 // =============================================
                 // Baccarat Mini-Game Functions
@@ -3027,7 +3402,7 @@
                     elements.gameResultText.textContent = '';
                     elements.betOptionBtns.forEach(btn => btn.classList.remove('active-bet')); // Remove active bet highlight
                     gameState.currentBet.type = null; // Clear selected bet type
-                    gameState.currentBet.amount = 0; // Clear selected bet amount
+                    // gameState.currentBet.amount is kept as last entered for convenience
                 }
 
                 function dealHand() {
@@ -3049,6 +3424,7 @@
 
                     resetMiniGameUI();
                     displayMessage(`Betting $${betAmount} on ${betTarget.toUpperCase()}. Dealing cards...`, 'info');
+                    gameState.currentBet.amount = betAmount; // Store actual bet amount for this round
 
                     gameState.deck = createDeck();
                     gameState.playerHand = [];
@@ -3068,30 +3444,53 @@
                     elements.playerScore.textContent = playerScore;
                     elements.bankerScore.textContent = bankerScore;
 
+                    // Delay for natural win check and potential third card draw
                     setTimeout(() => {
                         let playerThirdCard = null;
 
-                        // Player's third card rule
-                        const playerDraws = shouldPlayerDraw(playerScore);
-                        if (playerDraws) {
-                            playerThirdCard = gameState.deck.pop();
-                            gameState.playerHand.push(playerThirdCard);
-                            displayHand(gameState.playerHand, 'playerCardList');
-                            playerScore = calculateHandScore(gameState.playerHand);
-                            elements.playerScore.textContent = playerScore;
-                            displayMessage('Player drew a third card.', 'info');
+                        // Check for natural wins immediately after initial deal
+                        const playerNatural = gameState.playerHand.length === 2 && (playerScore === 8 || playerScore === 9);
+                        const bankerNatural = gameState.bankerHand.length === 2 && (bankerScore === 8 || bankerScore === 9);
+
+                        let needsThirdCardPhase = true;
+
+                        if (playerNatural || bankerNatural) {
+                            if (playerNatural && bankerNatural) {
+                                // Both have naturals, determine winner directly
+                                needsThirdCardPhase = false;
+                            } else if (playerNatural) {
+                                // Only player has natural
+                                needsThirdCardPhase = false;
+                            } else if (bankerNatural) {
+                                // Only banker has natural
+                                needsThirdCardPhase = false;
+                            }
                         }
 
-                        // Banker's third card rule
-                        const playerThirdCardValue = playerThirdCard ? getCardValueBaccarat(playerThirdCard) : null;
-                        const bankerDraws = shouldBankerDraw(bankerScore, playerThirdCardValue);
-                        if (bankerDraws) {
-                            gameState.bankerHand.push(gameState.deck.pop());
-                            displayHand(gameState.bankerHand, 'bankerCardList');
-                            bankerScore = calculateHandScore(gameState.bankerHand);
-                            elements.bankerScore.textContent = bankerScore;
-                            displayMessage('Banker drew a third card.', 'info');
+                        if (needsThirdCardPhase) {
+                            // Player's third card rule
+                            const playerDraws = shouldPlayerDraw(playerScore);
+                            if (playerDraws) {
+                                playerThirdCard = gameState.deck.pop();
+                                gameState.playerHand.push(playerThirdCard);
+                                displayHand(gameState.playerHand, 'playerCardList');
+                                playerScore = calculateHandScore(gameState.playerHand);
+                                elements.playerScore.textContent = playerScore;
+                                displayMessage('Player drew a third card.', 'info');
+                            }
+
+                            // Banker's third card rule
+                            const playerThirdCardValue = playerThirdCard ? getCardValueBaccarat(playerThirdCard) : null;
+                            const bankerDraws = shouldBankerDraw(bankerScore, playerThirdCardValue);
+                            if (bankerDraws) {
+                                gameState.bankerHand.push(gameState.deck.pop());
+                                displayHand(gameState.bankerHand, 'bankerCardList');
+                                bankerScore = calculateHandScore(gameState.bankerHand);
+                                elements.bankerScore.textContent = bankerScore;
+                                displayMessage('Banker drew a third card.', 'info');
+                            }
                         }
+
 
                         setTimeout(() => {
                             const winner = determineWinner(playerScore, bankerScore, gameState.playerHand, gameState.bankerHand);
@@ -3101,19 +3500,19 @@
 
                             if (winner === betTarget) {
                                 if (betTarget === 'banker') {
-                                    winLossAmount = betAmount * 0.95; // Banker wins pay 0.95 (5% commission)
+                                    winLossAmount = gameState.currentBet.amount * 0.95; // Banker wins pay 0.95 (5% commission)
                                 } else if (betTarget === 'tie') {
-                                    winLossAmount = betAmount * 8; // Tie typically pays 8:1
+                                    winLossAmount = gameState.currentBet.amount * 8; // Tie typically pays 8:1
                                 } else {
-                                    winLossAmount = betAmount; // Player wins pay 1:1
+                                    winLossAmount = gameState.currentBet.amount; // Player wins pay 1:1
                                 }
                                 gameState.miniGameBalance += winLossAmount; // Update mini-game balance
                                 resultText = `You WON! ${winner.toUpperCase()} wins! (+ $${winLossAmount.toFixed(2)})`;
                                 resultClass = 'result-player'; // Use player color for winning
                             } else {
-                                winLossAmount = -betAmount;
-                                gameState.miniGameBalance -= betAmount; // Update mini-game balance
-                                resultText = `You LOST! ${winner.toUpperCase()} wins. (- $${betAmount.toFixed(2)})`;
+                                winLossAmount = -gameState.currentBet.amount;
+                                gameState.miniGameBalance -= gameState.currentBet.amount; // Update mini-game balance
+                                resultText = `You LOST! ${winner.toUpperCase()} wins. (- $${Math.abs(winLossAmount).toFixed(2)})`;
                                 resultClass = 'result-banker'; // Use banker color for losing
                             }
 
@@ -3172,12 +3571,16 @@
                         const tabId = event.target.dataset.tab;
 
                         elements.strategyTabs.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                        elements.tabContents.forEach(content => content.classList.remove('active'));
+                        elements.tabContents.forEach(content => {
+                            content.classList.remove('active');
+                            content.classList.remove('animate__fadeIn'); // Ensure previous fade-in is removed
+                        });
 
                         event.target.classList.add('active');
-                        document.getElementById(tabId).classList.add('active');
-
-                        // Re-initialize chart only for Card Counting tab if not already initialized
+                        const activeTabContent = document.getElementById(tabId);
+                        activeTabContent.classList.add('active', 'animate__animated', 'animate__fadeIn'); // Add fade-in animation
+                        
+                        // Re-initialize chart only for Card Counting tab if not already initialized or is missing
                         if (tabId === 'cardCounting' && (!gameState.chart || !elements.chartArea.querySelector('canvas'))) {
                             initChart();
                             updateChart();
@@ -3188,7 +3591,19 @@
                             updateStats();
                             updateHistory();
                             updateRecommendation();
+                        } else if (tabId === 'patternRecognition') {
+                            updatePatternDetails(); // Re-render details on tab switch
+                            updatePatternAnalysis(); // Re-evaluate pattern recommendation
+                            initPatternOutcomeDistributionChart(); // Ensure pattern outcome chart is initialized
+                            updatePatternOutcomeDistributionChart(); // Update it
+                        } else if (tabId === 'miniGame') {
+                            resetMiniGameUI(); // Reset mini-game UI on tab switch
                         }
+
+                        // Remove animation class after it completes to allow re-triggering
+                        setTimeout(() => {
+                            activeTabContent.classList.remove('animate__fadeIn');
+                        }, 1200); // Chart fade-in duration
                     }
                 });
 
@@ -3207,7 +3622,7 @@
                     button.addEventListener('click', function() {
                         if (gameState.currentPatternStrategy) {
                             recordPatternOutcome(this.dataset.outcome);
-                            this.classList.add('animate__pulse');
+                            this.classList.add('animate__animated', 'animate__pulse'); // Use animate.css pulse
                             setTimeout(() => this.classList.remove('animate__pulse'), 500);
                         } else {
                             displayMessage('Please select a pattern strategy first!', 'error');
@@ -3222,10 +3637,31 @@
                     gameState.patternBetting.isEnabled = this.checked;
                     if (this.checked) {
                         elements.patternBettingControls.classList.remove('hidden');
+                        elements.patternBettingControls.classList.add('animate__animated', 'animate__fadeInDown');
+                        
+                        if (!gameState.patternBetting.currentSystem) {
+                            selectPatternBettingSystem('flatBetting'); // Defaults to flat if none selected
+                        } else {
+                            updatePatternNextBetDisplay(); // Update display if system already selected
+                        }
+
+                        // Show theoretical bankroll chart only if a betting system is selected AND it's not Masaniello
+                        if (gameState.patternBetting.currentSystem && gameState.currentPatternStrategy !== 'masaniello') {
+                            // Only show if there's actual bankroll history to display, or if it's a fresh start
+                            if (gameState.bankrollTimeline.length > 0 || gameState.patternBetting.theoreticalBankroll === 10000) {
+                                elements.patternChartContainer.classList.remove('hidden');
+                                elements.patternChartContainer.classList.add('animate__animated', 'animate__fadeInUp');
+                                updatePatternAnalysisChart(); // Initialize/update chart
+                            }
+                        } else {
+                            elements.patternChartContainer.classList.add('hidden'); // Hide if Masaniello or no system
+                        }
                         displayMessage('Betting progression enabled.', 'success');
                     } else {
                         elements.patternBettingControls.classList.add('hidden');
-                        resetPatternBettingSystem(); // Reset state when disabled
+                        elements.patternBettingControls.classList.remove('animate__fadeInDown');
+                        elements.patternChartContainer.classList.add('hidden'); // Hide chart when disabled
+                        resetPatternBettingSystem(true); // Reset all, including selected system
                         displayMessage('Betting progression disabled and reset.', 'info');
                     }
                 });
@@ -3239,10 +3675,18 @@
                 elements.bettingProgressionDropdownMenu.addEventListener('click', (event) => {
                     if (event.target.classList.contains('dropdown-item')) {
                         selectPatternBettingSystem(event.target.dataset.system);
+                        // Show theoretical bankroll chart if betting is enabled and not Masaniello
+                        if (gameState.patternBetting.isEnabled && gameState.currentPatternStrategy !== 'masaniello') {
+                            elements.patternChartContainer.classList.remove('hidden');
+                            elements.patternChartContainer.classList.add('animate__animated', 'animate__fadeInUp');
+                            updatePatternAnalysisChart();
+                        } else {
+                            elements.patternChartContainer.classList.add('hidden');
+                        }
                     }
                 });
 
-                elements.patternResetBettingBtn.addEventListener('click', resetPatternBettingSystem);
+                elements.patternResetBettingBtn.addEventListener('click', () => resetPatternBettingSystem(false)); // Don't reset selected system
 
                 // Set Unit Value for Betting Progressions
                 elements.setBetUnitValueBtn.addEventListener('click', function() {
@@ -3251,8 +3695,12 @@
                         gameState.patternBetting.bettingUnitValue = newUnitValue;
                         displayMessage(`Betting unit set to $${newUnitValue}.`, 'success');
                         updatePatternNextBetDisplay(); // Update display with new unit value
+                        this.classList.add('animate__animated', 'animate__tada'); // Add animation
+                        setTimeout(() => this.classList.remove('animate__tada'), 1000);
                     } else {
                         displayMessage('Please enter a valid unit value (minimum $1).', 'error');
+                        this.classList.add('animate__animated', 'animate__shakeX'); // Add animation on error
+                        setTimeout(() => this.classList.remove('animate__shakeX'), 1000);
                     }
                 });
 
@@ -3263,13 +3711,15 @@
                         elements.betOptionBtns.forEach(btn => btn.classList.remove('active-bet')); // Clear active state
                         this.classList.add('active-bet'); // Add active state to clicked button
                         gameState.currentBet.type = this.dataset.betTarget;
-                        displayMessage(`Selected to bet on ${gameState.currentBet.type.toUpperCase()}`, 'info');
+                        displayMessage(`Selected to bet on ${gameState.currentBet.type.toUpperCase()}.`, 'info');
+                        this.classList.add('animate__animated', 'animate__rubberBand');
+                        setTimeout(() => this.classList.remove('animate__rubberBand'), 1000);
                     });
                 });
 
                 elements.dealHandBtn.addEventListener('click', function() {
                     dealHand();
-                    this.classList.add('animate__swing');
+                    this.classList.add('animate__animated', 'animate__swing');
                     setTimeout(() => {
                         this.classList.remove('animate__swing');
                     }, 1000);
@@ -3278,14 +3728,19 @@
 
                 // Initial setup for the app (after successful authentication)
                 function init() {
-                    initChart();
-                    startTimer();
+                    initChart(); // Initialize chart for card counting tab
+                    startTimer(); // Start global timer
+                    // No sample data added automatically on init for card counting
                     updateRoadmap();
                     updateChart();
                     updateStats();
                     updateHistory();
                     updateRecommendation();
-                    initMasanielloGrid(); // Initialize Masaniello grid
+                    initMasanielloGrid(); // Initialize Masaniello grid state
+                    updatePatternDetails(); // Load initial pattern details and prediction
+                    updatePatternNextBetDisplay(); // Initialize betting display
+                    initPatternAnalysisChart(); // Initialize the new pattern analysis chart (theoretical bankroll)
+                    initPatternOutcomeDistributionChart(); // Initialize the new pattern outcome distribution chart
                 }
 
                 init();
