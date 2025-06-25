@@ -1709,10 +1709,7 @@
                     <!-- Pattern specific analysis will be injected here -->
                 </div>
 
-                <div id="patternOutcomeDistributionChartContainer" class="hidden mt-6 panel">
-                    <h4 class="panel-title">Pattern Outcome Distribution</h4>
-                    <canvas id="patternOutcomeDistributionChart"></canvas>
-                </div>
+                <!-- Removed the patternOutcomeDistributionChartContainer -->
 
                 <div class="switch-container mt-6">
                     <label class="switch">
@@ -2280,7 +2277,7 @@
                     },
                     patternAnalysisChartInstance: null,
                     bankrollTimeline: [],
-                    patternOutcomeDistributionChartInstance: null,
+                    // Removed patternOutcomeDistributionChartInstance
                     
                     deck: [],
                     playerHand: [],
@@ -2347,8 +2344,7 @@
                     setBetUnitValueBtn: document.getElementById('setBetUnitValueBtn'),
                     patternAnalysisChartCanvas: document.getElementById('patternAnalysisChart'),
                     patternChartContainer: document.getElementById('patternChartContainer'),
-                    patternOutcomeDistributionChartCanvas: document.getElementById('patternOutcomeDistributionChart'),
-                    patternOutcomeDistributionChartContainer: document.getElementById('patternOutcomeDistributionChartContainer'),
+                    // Removed patternOutcomeDistributionChartCanvas and patternOutcomeDistributionChartContainer
 
                     miniGameBalanceDisplay: document.getElementById('miniGameBalanceDisplay'),
                     betOptionBtns: document.querySelectorAll('.bet-option-btn'),
@@ -2779,9 +2775,8 @@
                     initMasanielloGrid();
                     updatePatternDetails();
                     
-                    initPatternOutcomeDistributionChart();
-                    updatePatternOutcomeDistributionChart();
-                    elements.patternOutcomeDistributionChartContainer.classList.remove('hidden');
+                    // Removed initPatternOutcomeDistributionChart and updatePatternOutcomeDistributionChart
+                    // elements.patternOutcomeDistributionChartContainer.classList.remove('hidden'); // This line is also removed
 
                     document.getElementById('patternRecognition').classList.add('animate__animated', 'animate__fadeIn');
                     setTimeout(() => {
@@ -2831,11 +2826,11 @@
 
                     if (gameState.currentPatternStrategy === 'masaniello') {
                         drawMasanielloGrid();
-                        elements.patternOutcomeDistributionChartContainer.classList.add('hidden');
+                        // Removed elements.patternOutcomeDistributionChartContainer.classList.add('hidden');
                         elements.patternChartContainer.classList.add('hidden');
                     } else {
-                         elements.patternOutcomeDistributionChartContainer.classList.remove('hidden');
-                         updatePatternOutcomeDistributionChart();
+                         // Removed elements.patternOutcomeDistributionChartContainer.classList.remove('hidden');
+                         // Removed updatePatternOutcomeDistributionChart();
                          if (gameState.patternBetting.isEnabled && gameState.patternBetting.currentSystem) {
                             elements.patternChartContainer.classList.remove('hidden');
                             updatePatternAnalysisChart();
@@ -2852,34 +2847,48 @@
                     gameState.masanielloState.currentCol = 0;
                 }
 
+                // Optimized drawMasanielloGrid to only update active cell, not re-render all
                 function drawMasanielloGrid() {
                     const gridElement = document.getElementById('masanielloGrid');
-                    if (!gridElement) return;
+                    if (!gridElement) {
+                        // If grid not yet rendered (first time Masaniello is selected),
+                        // render it fully. Subsequent calls will update.
+                        gridElement.innerHTML = ''; // Clear any existing cells if re-rendering from scratch
+                        for (let r = gameState.masanielloState.gridRows - 1; r >= 0; r--) {
+                            for (let c = 0; c < gameState.masanielloState.gridCols; c++) {
+                                const cell = document.createElement('div');
+                                cell.className = 'masaniello-cell animate__animated animate__fadeIn';
+                                cell.style.animationDelay = `${(r + c) * 0.05}s`;
+                                cell.dataset.row = r; // Store row for quick lookup
+                                cell.dataset.col = c; // Store col for quick lookup
+                                const cellData = masanielloGridConfig[r][c];
 
-                    gridElement.innerHTML = '';
-                    for (let r = gameState.masanielloState.gridRows - 1; r >= 0; r--) {
-                        for (let c = 0; c < gameState.masanielloState.gridCols; c++) {
-                            const cell = document.createElement('div');
-                            cell.className = 'masaniello-cell animate__animated animate__fadeIn';
-                            cell.style.animationDelay = `${(r + c) * 0.05}s`;
-                            const cellData = masanielloGridConfig[r][c];
+                                cell.innerHTML = `<span class="value">${cellData.value}</span><span class="bet-type">${cellData.bet.replace('-', ' ').toUpperCase()}</span>`;
 
-                            cell.innerHTML = `<span class="value">${cellData.value}</span><span class="bet-type">${cellData.bet.replace('-', ' ').toUpperCase()}</span>`;
-
-                            if (cellData.bet === 'player') {
-                                cell.classList.add('player-bg');
-                            } else if (cellData.bet === 'banker') {
-                                cell.classList.add('banker-bg');
-                            } else if (cellData.bet === 'sit-out') {
-                                cell.classList.add('sit-out-bg');
+                                if (cellData.bet === 'player') {
+                                    cell.classList.add('player-bg');
+                                } else if (cellData.bet === 'banker') {
+                                    cell.classList.add('banker-bg');
+                                } else if (cellData.bet === 'sit-out') {
+                                    cell.classList.add('sit-out-bg');
+                                }
+                                gridElement.appendChild(cell);
                             }
-
-                            if (r === gameState.masanielloState.currentRow && c === gameState.masanielloState.currentCol) {
-                                cell.classList.add('active-position');
-                            }
-                            gridElement.appendChild(cell);
                         }
                     }
+
+                    // Remove active class from previous cell
+                    const previousActiveCell = gridElement.querySelector('.masaniello-cell.active-position');
+                    if (previousActiveCell) {
+                        previousActiveCell.classList.remove('active-position');
+                    }
+
+                    // Add active class to current cell
+                    const currentActiveCell = gridElement.querySelector(`.masaniello-cell[data-row="${gameState.masanielloState.currentRow}"][data-col="${gameState.masanielloState.currentCol}"]`);
+                    if (currentActiveCell) {
+                        currentActiveCell.classList.add('active-position');
+                    }
+
                     const currentColSpan = document.getElementById('masanielloCurrentCol');
                     const currentRowSpan = document.getElementById('masanielloCurrentRow');
                     if (currentColSpan) currentColSpan.textContent = gameState.masanielloState.currentCol;
@@ -2980,7 +2989,7 @@
                     gameState.patternHistory.push(outcome);
                     gameState.outcomeCounts[outcome]++;
                     displayMessage(`Outcome: ${outcome.toUpperCase()} recorded.`, 'info');
-                    updatePatternOutcomeDistributionChart();
+                    // Removed updatePatternOutcomeDistributionChart();
 
 
                     let impliedBetTarget = null;
@@ -3137,7 +3146,7 @@
                     
                     initMasanielloGrid();
                     updatePatternDetails();
-                    updatePatternOutcomeDistributionChart();
+                    // Removed updatePatternOutcomeDistributionChart();
 
                     elements.patternAnalysisResult.classList.add('hidden');
                     elements.patternAnalysisResult.innerHTML = '';
@@ -3470,90 +3479,8 @@
                     gameState.patternAnalysisChartInstance.update();
                 }
 
-                function initPatternOutcomeDistributionChart() {
-                    if (gameState.patternOutcomeDistributionChartInstance) {
-                        gameState.patternOutcomeDistributionChartInstance.destroy();
-                    }
-                    let canvas = elements.patternOutcomeDistributionChartContainer.querySelector('#patternOutcomeDistributionChart');
-                    if (!canvas) {
-                        elements.patternOutcomeDistributionChartContainer.innerHTML = '<h4 class="panel-title">Pattern Outcome Distribution</h4><canvas id="patternOutcomeDistributionChart"></canvas>';
-                        canvas = elements.patternOutcomeDistributionChartContainer.querySelector('#patternOutcomeDistributionChart');
-                    }
-
-                    const ctx = canvas.getContext('2d');
-                    if (!ctx) return;
-
-                    const style = getComputedStyle(document.documentElement);
-                    const infoColor = style.getPropertyValue('--info').trim();
-                    const dangerColor = style.getPropertyValue('--danger').trim();
-                    const warningColor = style.getPropertyValue('--warning').trim();
-
-                    gameState.patternOutcomeDistributionChartInstance = new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: ['Player', 'Banker', 'Tie'],
-                            datasets: [{
-                                label: 'Outcome Count',
-                                data: [0, 0, 0],
-                                backgroundColor: [infoColor, dangerColor, warningColor],
-                                borderColor: ['#fff', '#fff', '#fff'],
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            return `${context.label}: ${context.raw}`;
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    grid: { display: false },
-                                    ticks: { color: 'var(--text-primary)' }
-                                },
-                                y: {
-                                    beginAtZero: true,
-                                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                                    ticks: { color: 'var(--text-primary)', precision: 0 }
-                                }
-                            },
-                            animation: {
-                                duration: 800,
-                                easing: 'easeOutQuart'
-                            }
-                        }
-                    });
-                }
-
-                function updatePatternOutcomeDistributionChart() {
-                    if (!gameState.patternOutcomeDistributionChartInstance) {
-                        initPatternOutcomeDistributionChart();
-                    }
-                    if (!gameState.patternOutcomeDistributionChartInstance) {
-                        return;
-                    }
-
-                    const playerCounts = gameState.patternHistory.filter(o => o === 'player').length;
-                    const bankerCounts = gameState.patternHistory.filter(o => o === 'banker').length;
-                    const tieCounts = gameState.patternHistory.filter(o => o === 'tie').length;
-
-                    gameState.patternOutcomeDistributionChartInstance.data.datasets[0].data = [playerCounts, bankerCounts, tieCounts];
-                    gameState.patternOutcomeDistributionChartInstance.update();
-                    
-                    elements.patternOutcomeDistributionChartContainer.classList.remove('hidden');
-                    elements.patternOutcomeDistributionChartContainer.classList.remove('animate__animated', 'animate__fadeIn');
-                    void elements.patternOutcomeDistributionChartContainer.offsetWidth;
-                    elements.patternOutcomeDistributionChartContainer.classList.add('animate__animated', 'animate__fadeIn');
-                }
+                // Removed initPatternOutcomeDistributionChart function
+                // Removed updatePatternOutcomeDistributionChart function
 
 
                 // =============================================
@@ -3825,8 +3752,7 @@
                         } else if (tabId === 'patternRecognition') {
                             updatePatternDetails(); // Re-render details on tab switch
                             updatePatternAnalysis(); // Re-evaluate pattern recommendation
-                            initPatternOutcomeDistributionChart(); // Ensure pattern outcome chart is initialized
-                            updatePatternOutcomeDistributionChart(); // Update it
+                            // Removed initPatternOutcomeDistributionChart and updatePatternOutcomeDistributionChart
                             // Re-initialize bankroll chart only if progression enabled and not Masaniello
                             if (gameState.patternBetting.isEnabled && gameState.patternBetting.currentSystem && gameState.currentPatternStrategy !== 'masaniello') {
                                 initPatternAnalysisChart();
@@ -3975,7 +3901,7 @@
                     updatePatternDetails(); // Load initial pattern details and prediction
                     updatePatternNextBetDisplay(); // Initialize betting display
                     initPatternAnalysisChart(); // Initialize the new pattern analysis chart (theoretical bankroll)
-                    initPatternOutcomeDistributionChart(); // Initialize the new pattern outcome distribution chart
+                    // Removed initPatternOutcomeDistributionChart
                 }
 
                 init();
