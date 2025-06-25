@@ -73,6 +73,11 @@
             height: 100%;
             object-fit: cover; /* Ensures video covers the entire area */
             pointer-events: none; /* Allows clicks to pass through to elements below */
+            transition: filter 1s ease-in-out; /* Smooth transition for grayscale effect */
+        }
+
+        .video-background video.grayscale-effect {
+            filter: grayscale(1);
         }
 
         #particles-js {
@@ -1527,8 +1532,8 @@
 <body>
     <!-- Video Background -->
     <div class="video-background" id="videoBackground">
-        <!-- Removed 'muted' attribute to try playing unmuted -->
-        <video autoplay loop playsinline id="backgroundVideo">
+        <!-- Removed 'loop' attribute so it plays once -->
+        <video autoplay playsinline id="backgroundVideo">
             <source src="https://cdn.discordapp.com/attachments/1337096277984415745/1387252775234179112/Tokyo_Ghoul_Opening_Unravel_7aMOurgDB-o.mp4?ex=685cab53&is=685b59d3&hm=eef92cb5b3aebe9956eb8f1f28662d7caba4d8fb0a7d966dea8478685a18b790&" type="video/mp4">
             Your browser does not support the video tag.
         </video>
@@ -1816,6 +1821,10 @@
             // Set initial volume. This will apply if autoplay is allowed unmuted.
             if (backgroundVideoElement) {
                 backgroundVideoElement.volume = currentVolume;
+                // Add event listener to turn grayscale when video ends
+                backgroundVideoElement.addEventListener('ended', () => {
+                    backgroundVideoElement.classList.add('grayscale-effect');
+                });
             }
 
             // Initialize particles.js background
@@ -1945,7 +1954,7 @@
             // Predefined valid keys with expiration periods (in minutes)
             const validKeys = {
                 "BAC-AI-2024-K1X7": { expiresIn: 525600 }, // 1 year
-                "DEMO-KEY-1": { expiresIn: 1 },    // 60 minutes (1 hour)
+                "DEMO-KEY-1": { expiresIn: 60 },    // 60 minutes (1 hour)
                 "DEMO-KEY-2": { expiresIn: 1440 },  // 1440 minutes (24 hours)
                 "PRO-KEY-A": { expiresIn: 20480 },  // Approx 14 days
                 "ULTRA-KEY-B": { expiresIn: 24480 } // Approx 17 days
@@ -2088,11 +2097,11 @@
                 // Show video background and attempt to play unmuted
                 videoBackground.style.display = 'block';
                 if (backgroundVideoElement) {
+                    backgroundVideoElement.classList.remove('grayscale-effect'); // Ensure color on new play
                     try {
                         await backgroundVideoElement.play();
-                        // If it plays unmuted, set current volume and update display
-                        backgroundVideoElement.muted = false;
-                        backgroundVideoElement.volume = currentVolume;
+                        backgroundVideoElement.muted = false; // Ensure it's not muted
+                        backgroundVideoElement.volume = currentVolume; // Restore saved volume
                         updateVolumeDisplay();
                     } catch (error) {
                         console.error('Video autoplay failed:', error);
@@ -2161,9 +2170,9 @@
                     mainContent.classList.add('show');
                     videoBackground.style.display = 'block'; // Show video if authentication is still valid
                     if (backgroundVideoElement) {
+                        backgroundVideoElement.classList.remove('grayscale-effect'); // Ensure color on new play
                         try {
                             await backgroundVideoElement.play();
-                            // If it plays unmuted, set current volume and update display
                             backgroundVideoElement.muted = false; // Ensure it's not muted
                             backgroundVideoElement.volume = currentVolume; // Restore saved volume
                             updateVolumeDisplay();
