@@ -1527,8 +1527,8 @@
 <body>
     <!-- Video Background -->
     <div class="video-background" id="videoBackground">
-        <!-- Replaced YouTube iframe with a direct video tag -->
-        <video autoplay loop muted playsinline id="backgroundVideo">
+        <!-- Removed 'muted' attribute to try playing unmuted -->
+        <video autoplay loop playsinline id="backgroundVideo">
             <source src="https://cdn.discordapp.com/attachments/1337096277984415745/1387252775234179112/Tokyo_Ghoul_Opening_Unravel_7aMOurgDB-o.mp4?ex=685cab53&is=685b59d3&hm=eef92cb5b3aebe9956eb8f1f28662d7caba4d8fb0a7d966dea8478685a18b790&" type="video/mp4">
             Your browser does not support the video tag.
         </video>
@@ -1570,6 +1570,7 @@
                     <span class="time-value" id="timeValue">00:00:00</span>
                 </div>
                 <button id="volumeBtn" class="volume-control-btn">
+                    <!-- Initial icon and text. Text will be updated via JS. -->
                     <i class="fas fa-volume-up"></i> <span id="volumeText">100%</span>
                 </button>
             </div>
@@ -1807,10 +1808,15 @@
 
     <script>
         let backgroundVideoElement; // Declare video element variable globally
-        let currentVolume = 0.2; // Initialize with 20% volume (0.2 for video.volume)
+        let currentVolume = 1; // Initialize with 100% volume (1 for video.volume) as per user request
 
         document.addEventListener('DOMContentLoaded', async function() {
             backgroundVideoElement = document.getElementById('backgroundVideo');
+
+            // Set initial volume. This will apply if autoplay is allowed unmuted.
+            if (backgroundVideoElement) {
+                backgroundVideoElement.volume = currentVolume;
+            }
 
             // Initialize particles.js background
             particlesJS('particles-js', {
@@ -1932,7 +1938,8 @@
             const timeContainer = document.getElementById('timeContainer');
             const videoBackground = document.getElementById('videoBackground');
             const volumeBtn = document.getElementById('volumeBtn');
-            const volumeText = document.getElementById('volumeText');
+            const volumeIcon = volumeBtn.querySelector('i'); // Get the icon element
+            const volumeTextSpan = document.getElementById('volumeText'); // Get the span element
 
 
             // Predefined valid keys with expiration periods (in minutes)
@@ -2078,16 +2085,22 @@
                 authSuccess.style.display = 'block';
                 this.disabled = true;
 
-                // Show video background and play
+                // Show video background and attempt to play unmuted
                 videoBackground.style.display = 'block';
                 if (backgroundVideoElement) {
-                    backgroundVideoElement.muted = false; // Unmute
-                    backgroundVideoElement.volume = currentVolume; // Set volume to 20%
-                    backgroundVideoElement.play().catch(error => {
+                    try {
+                        await backgroundVideoElement.play();
+                        // If it plays unmuted, set current volume and update display
+                        backgroundVideoElement.muted = false;
+                        backgroundVideoElement.volume = currentVolume;
+                        updateVolumeDisplay();
+                    } catch (error) {
                         console.error('Video autoplay failed:', error);
-                        displayMessage('Video autoplay blocked. Please tap to play.', 'warning');
-                        // Optionally show a play button if autoplay fails
-                    });
+                        // If autoplay fails (e.g., policy block), mute and inform user
+                        backgroundVideoElement.muted = true;
+                        displayMessage('Video autoplay blocked. Tap volume control to unmute.', 'warning');
+                        updateVolumeDisplay(); // Update display to show muted state
+                    }
                 }
                 
                 setTimeout(() => {
@@ -2148,13 +2161,19 @@
                     mainContent.classList.add('show');
                     videoBackground.style.display = 'block'; // Show video if authentication is still valid
                     if (backgroundVideoElement) {
-                        backgroundVideoElement.muted = false; // Unmute
-                        backgroundVideoElement.volume = currentVolume; // Ensure current volume is maintained
-                        backgroundVideoElement.play().catch(error => {
-                            console.error('Video autoplay failed:', error);
-                            displayMessage('Video autoplay blocked. Please tap to play.', 'warning');
-                            // Optionally show a play button if autoplay fails
-                        });
+                        try {
+                            await backgroundVideoElement.play();
+                            // If it plays unmuted, set current volume and update display
+                            backgroundVideoElement.muted = false; // Ensure it's not muted
+                            backgroundVideoElement.volume = currentVolume; // Restore saved volume
+                            updateVolumeDisplay();
+                        } catch (error) {
+                            console.error('Video autoplay on refresh failed:', error);
+                            // If autoplay fails, mute and inform user
+                            backgroundVideoElement.muted = true;
+                            displayMessage('Video autoplay blocked. Tap volume control to unmute.', 'warning');
+                            updateVolumeDisplay(); // Update display to show muted state
+                        }
                     }
                     initApp(savedKey);
                     return true;
@@ -2167,15 +2186,21 @@
 
             // Update volume display and icon
             function updateVolumeDisplay() {
-                if (backgroundVideoElement) {
+                if (backgroundVideoElement && volumeIcon && volumeTextSpan) {
                     const volumePercentage = Math.round(backgroundVideoElement.volume * 100);
-                    volumeText.textContent = `${volumePercentage}%`;
-                    if (volumePercentage === 0 || backgroundVideoElement.muted) {
-                        volumeBtn.innerHTML = '<i class="fas fa-volume-off"></i> <span id="volumeText">Muted</span>';
-                    } else if (volumePercentage <= 50) {
-                        volumeBtn.innerHTML = '<i class="fas fa-volume-down"></i> <span id="volumeText">' + volumePercentage + '%</span>';
+                    
+                    if (backgroundVideoElement.muted) {
+                        volumeIcon.className = 'fas fa-volume-off';
+                        volumeTextSpan.textContent = 'Muted';
                     } else {
-                        volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i> <span id="volumeText">' + volumePercentage + '%</span>';
+                        volumeTextSpan.textContent = `${volumePercentage}%`;
+                        if (volumePercentage === 0) {
+                            volumeIcon.className = 'fas fa-volume-off';
+                        } else if (volumePercentage <= 50) {
+                            volumeIcon.className = 'fas fa-volume-down';
+                        } else {
+                            volumeIcon.className = 'fas fa-volume-up';
+                        }
                     }
                 }
             }
@@ -2183,23 +2208,25 @@
             // Volume control button logic
             volumeBtn.addEventListener('click', function() {
                 if (backgroundVideoElement) {
-                    let newVolume = Math.round(backgroundVideoElement.volume * 100) + 10; // Get current percentage, add 10
-
-                    // Clamp to 20-100% or cycle back to 20%
-                    if (newVolume > 100) {
-                        newVolume = 20; // Loop back to min if max is reached
-                        displayMessage('Volume reset to 20%.', 'info');
-                    } else if (newVolume < 20) { // Should not be hit if starting at 20 and increasing
-                        newVolume = 20;
-                        displayMessage('Video volume cannot be set less than 20%.', 'warning');
+                    // If currently muted, unmute and set to initial volume (which is 100% or currentVolume)
+                    if (backgroundVideoElement.muted) {
+                        backgroundVideoElement.muted = false;
+                        backgroundVideoElement.volume = currentVolume > 0 ? currentVolume : 0.2; // Use currentVolume or default to 20% if 0
+                        displayMessage(`Volume set to ${Math.round(backgroundVideoElement.volume * 100)}%.`, 'info');
                     } else {
-                        displayMessage(`Volume set to ${newVolume}%.`, 'info');
+                        // If not muted, cycle through volumes
+                        let newVolumePercentage = Math.round(backgroundVideoElement.volume * 100) + 10;
+
+                        if (newVolumePercentage > 100) {
+                            newVolumePercentage = 0; // Cycle to mute
+                            displayMessage('Volume muted.', 'info');
+                        } else {
+                            displayMessage(`Volume set to ${newVolumePercentage}%.`, 'info');
+                        }
+                        backgroundVideoElement.volume = newVolumePercentage / 100;
+                        currentVolume = newVolumePercentage / 100; // Update internal state
                     }
-                    
-                    backgroundVideoElement.volume = newVolume / 100; // Set volume as a decimal
-                    backgroundVideoElement.muted = false; // Ensure it's unmuted
-                    currentVolume = newVolume / 100; // Update internal state
-                    updateVolumeDisplay(); // Update UI
+                    updateVolumeDisplay(); // Update UI after change
                 }
             });
 
