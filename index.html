@@ -25,9 +25,10 @@
             --warning: #f59e0b;
             --info: #3b82f6;
             
-            --glass-bg: rgba(15, 23, 42, 0.7);
+            /* Translucent backgrounds */
+            --glass-bg: rgba(15, 23, 42, 0.6);
             --glass-border: rgba(255, 255, 255, 0.1);
-            --card-bg: rgba(30, 41, 59, 0.5);
+            --card-bg: rgba(30, 41, 59, 0.6);
             
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
@@ -48,11 +49,30 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--darker);
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
             position: relative;
+            background: none; /* Ensure no default body background, video will provide */
+        }
+
+        /* Video Background */
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2; /* Behind particles and main content */
+            overflow: hidden;
+            display: none; /* Hidden by default, shown after auth */
+        }
+
+        .video-background video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures video covers the entire area */
+            pointer-events: none; /* Allows clicks to pass through to elements below */
         }
 
         #particles-js {
@@ -61,8 +81,8 @@
             height: 100%;
             top: 0;
             left: 0;
-            z-index: -1;
-            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            z-index: -1; /* Above video, below content */
+            /* Removed background from here as video provides it */
         }
 
         /* Auth Overlay */
@@ -72,18 +92,18 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(2, 6, 23, 0.98);
+            background: rgba(2, 6, 23, 0.85); /* Slightly more translucent */
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px); /* More blur for the overlay */
             opacity: 1;
             transition: opacity 0.8s cubic-bezier(0.65, 0.05, 0.36, 1);
         }
 
         .auth-container {
-            background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9));
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.7), rgba(30, 41, 59, 0.7)); /* Translucent */
             padding: 3rem;
             border-radius: 1.5rem;
             width: 90%;
@@ -94,6 +114,7 @@
             animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(10px); /* Apply blur to the container */
         }
 
         .auth-container::before {
@@ -140,13 +161,14 @@
             margin-bottom: 1.5rem;
             border: none;
             border-radius: 0.75rem;
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.6); /* Translucent */
             color: var(--text-primary);
             font-size: 1rem;
             transition: var(--transition);
             outline: none;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
             border: 1px solid var(--glass-border);
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         .auth-input:focus {
@@ -244,6 +266,8 @@
             opacity: 0;
             transform: translateY(20px);
             transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            position: relative; /* Ensure it's above the video and particles */
+            z-index: 10;
         }
 
         .container.show {
@@ -285,8 +309,14 @@
             margin-left: 0.5rem;
         }
 
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem; /* Space between time and volume */
+        }
+
         .time-info {
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.6); /* Translucent */
             padding: 0.8rem 1.5rem;
             border-radius: 2rem;
             display: flex;
@@ -314,6 +344,29 @@
             color: var(--info);
             font-weight: 700;
         }
+        
+        .volume-control-btn {
+            background: rgba(15, 23, 42, 0.6); /* Translucent */
+            padding: 0.8rem 1.2rem;
+            border-radius: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+        }
+        .volume-control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+            background: var(--primary-dark);
+        }
+
 
         /* Tabs Navigation */
         .tabs-nav {
@@ -327,7 +380,7 @@
         }
 
         .tab-btn {
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.6); /* Translucent */
             color: var(--text-primary);
             padding: 0.8rem 1.5rem;
             border-radius: 0.75rem;
@@ -339,6 +392,7 @@
             box-shadow: var(--shadow-lg);
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         .tab-btn::before {
@@ -378,11 +432,11 @@
 
         /* Panel Styles */
         .panel {
-            background: var(--glass-bg);
+            background: var(--glass-bg); /* Translucent */
             border-radius: 1rem;
             padding: 2rem;
             box-shadow: var(--shadow-lg);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px); /* Apply blur */
             border: 1px solid var(--glass-border);
             margin-bottom: 2rem;
             position: relative;
@@ -460,7 +514,7 @@
         }
 
         .control-btn {
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(30, 41, 59, 0.6); /* Translucent */
             border: 1px solid var(--glass-border);
             color: var(--text-primary);
             padding: 0.6rem 1rem;
@@ -470,6 +524,7 @@
             font-size: 0.85rem;
             font-weight: 600;
             box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         .control-btn:hover {
@@ -491,13 +546,14 @@
             gap: 0.75rem;
             margin-top: 1.5rem;
             padding: 1.5rem;
-            background: rgba(15, 23, 42, 0.5);
+            background: rgba(15, 23, 42, 0.5); /* More translucent for background effect */
             border-radius: 0.75rem;
             overflow-x: auto;
             max-height: 250px;
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: var(--primary) rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         .roadmap::-webkit-scrollbar {
@@ -524,12 +580,13 @@
             justify-content: center;
             font-weight: 700;
             font-size: 1rem;
-            background-color: rgba(30, 41, 59, 0.7);
+            background-color: rgba(30, 41, 59, 0.6); /* Translucent */
             color: var(--text-primary);
             position: relative;
             transition: var(--transition);
             box-shadow: var(--shadow-lg);
             border: 2px solid var(--glass-border);
+            backdrop-filter: blur(3px); /* Apply blur */
         }
 
         .cell.predicted-player {
@@ -563,7 +620,7 @@
         }
 
         .bet-recommendation {
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.6); /* Translucent */
             padding: 2rem;
             border-radius: 0.75rem;
             margin-bottom: 2rem;
@@ -577,6 +634,7 @@
             border: 1px solid var(--glass-border);
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         .bet-recommendation::before {
@@ -622,11 +680,12 @@
         }
 
         .count-info {
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.6); /* Translucent */
             padding: 2rem;
             border-radius: 0.75rem;
             margin-bottom: 2rem;
             border: 1px solid var(--glass-border);
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         .count-title {
@@ -659,13 +718,14 @@
         }
 
         .stat-box {
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.6); /* Translucent */
             padding: 1.5rem;
             border-radius: 0.75rem;
             text-align: center;
             box-shadow: var(--shadow-lg);
             border: 1px solid var(--glass-border);
             transition: var(--transition);
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         .stat-box:hover {
@@ -706,11 +766,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(30, 41, 59, 0.6); /* Translucent */
             color: var(--text-primary);
             font-size: 1.1rem;
             box-shadow: var(--shadow-lg);
             border: 1px solid var(--glass-border);
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         .card-btn:hover {
@@ -725,7 +786,7 @@
         }
 
         .btn-secondary {
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(30, 41, 59, 0.6); /* Translucent */
             color: var(--text-primary);
             padding: 0.8rem 1.5rem;
             border-radius: 0.75rem;
@@ -735,6 +796,7 @@
             transition: var(--transition);
             font-size: 0.95rem;
             box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         .btn-secondary:hover {
@@ -881,7 +943,7 @@
         }
 
         .dropdown-button {
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(30, 41, 59, 0.6); /* Translucent */
             color: var(--text-primary);
             padding: 0.8rem 1.25rem;
             border-radius: 0.75rem;
@@ -895,6 +957,7 @@
             justify-content: space-between;
             width: 100%;
             box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         .dropdown-button:hover {
@@ -945,10 +1008,11 @@
         .masaniello-chart-container {
             margin-top: 1.5rem;
             padding: 1.5rem;
-            background: rgba(15, 23, 42, 0.5);
+            background: rgba(15, 23, 42, 0.4); /* More translucent */
             border-radius: 0.75rem;
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
             border: 1px solid var(--glass-border);
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         .masaniello-grid {
@@ -962,7 +1026,7 @@
         .masaniello-cell {
             width: 40px;
             height: 40px;
-            background-color: rgba(30, 41, 59, 0.7);
+            background-color: rgba(30, 41, 59, 0.6); /* Translucent */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -975,6 +1039,7 @@
             position: relative;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             border: 1px solid var(--glass-border);
+            backdrop-filter: blur(3px); /* Apply blur */
         }
 
         .masaniello-cell .value {
@@ -1037,7 +1102,7 @@
         }
 
         .bet-option-btn {
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(30, 41, 59, 0.6); /* Translucent */
             color: var(--text-primary);
             padding: 0.8rem 1.5rem;
             border-radius: 0.75rem;
@@ -1048,6 +1113,7 @@
             font-size: 0.95rem;
             box-shadow: var(--shadow-lg);
             text-transform: uppercase;
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         .bet-option-btn:hover {
@@ -1078,12 +1144,13 @@
             padding: 0.8rem;
             border-radius: 0.75rem;
             border: 1px solid var(--glass-border);
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.6); /* Translucent */
             color: var(--text-primary);
             font-size: 0.95rem;
             outline: none;
             text-align: center;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         .deal-btn {
@@ -1136,7 +1203,7 @@
         }
 
         .player-hand, .banker-hand {
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.6); /* Translucent */
             padding: 1.5rem;
             border-radius: 0.75rem;
             width: 48%;
@@ -1145,6 +1212,7 @@
             box-shadow: var(--shadow-lg);
             border: 1px solid var(--glass-border);
             transition: var(--transition);
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         .player-hand h3, .banker-hand h3 {
@@ -1178,6 +1246,7 @@
             position: relative;
             transform-style: preserve-3d;
             transform: perspective(500px);
+            backdrop-filter: blur(3px); /* Apply blur */
         }
 
         .card-item::before {
@@ -1227,7 +1296,7 @@
 
         /* Balance Display */
         .balance-info {
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.6); /* Translucent */
             padding: 1rem 1.5rem;
             border-radius: 0.75rem;
             margin-bottom: 1.5rem;
@@ -1236,17 +1305,7 @@
             display: inline-flex;
             align-items: center;
             gap: 0.75rem;
-        }
-
-        .balance-label {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-        }
-
-        .balance-value {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--success);
+            backdrop-filter: blur(5px); /* Apply blur */
         }
 
         /* Responsive Design */
@@ -1305,7 +1364,13 @@
                 font-size: 2rem;
             }
             
-            .time-info {
+            .header-controls {
+                flex-direction: column;
+                align-items: flex-start;
+                width: 100%;
+                gap: 0.75rem;
+            }
+            .time-info, .volume-control-btn {
                 width: 100%;
                 justify-content: center;
             }
@@ -1460,6 +1525,15 @@
     </style>
 </head>
 <body>
+    <!-- Video Background -->
+    <div class="video-background" id="videoBackground">
+        <!-- Replaced YouTube iframe with a direct video tag -->
+        <video autoplay loop muted playsinline id="backgroundVideo">
+            <source src="https://cdn.discordapp.com/attachments/1337096277984415745/1387252775234179112/Tokyo_Ghoul_Opening_Unravel_7aMOurgDB-o.mp4?ex=685cab53&is=685b59d3&hm=eef92cb5b3aebe9956eb8f1f28662d7caba4d8fb0a7d966dea8478685a18b790&" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    
     <!-- Particles.js Background -->
     <div id="particles-js"></div>
 
@@ -1490,9 +1564,14 @@
             <div class="logo">
                 Baccarat<span>AI</span>
             </div>
-            <div class="time-info" id="timeContainer">
-                <span class="time-label">Time Left:</span>
-                <span class="time-value" id="timeValue">00:00:00</span>
+            <div class="header-controls">
+                <div class="time-info" id="timeContainer">
+                    <span class="time-label">Time Left:</span>
+                    <span class="time-value" id="timeValue">00:00:00</span>
+                </div>
+                <button id="volumeBtn" class="volume-control-btn">
+                    <i class="fas fa-volume-up"></i> <span id="volumeText">100%</span>
+                </button>
             </div>
         </header>
 
@@ -1530,7 +1609,7 @@
                     <div class="count-info">
                         <div class="count-title">Current Running Count:</div>
                         <div class="count-result-value" id="countResultValue">0</div>
-                        <div class="count-desc" id="countDesc">This is the numerical result from the counting system.</div>
+                        <div class="count-desc">This is the numerical result from the counting system.</div>
                     </div>
 
                     <div class="stats-container">
@@ -1727,7 +1806,12 @@
     </div>
 
     <script>
+        let backgroundVideoElement; // Declare video element variable globally
+        let currentVolume = 0.2; // Initialize with 20% volume (0.2 for video.volume)
+
         document.addEventListener('DOMContentLoaded', async function() {
+            backgroundVideoElement = document.getElementById('backgroundVideo');
+
             // Initialize particles.js background
             particlesJS('particles-js', {
                 "particles": {
@@ -1846,6 +1930,10 @@
             const authSuccess = document.getElementById('authSuccess');
             const timeRemaining = document.getElementById('timeRemaining');
             const timeContainer = document.getElementById('timeContainer');
+            const videoBackground = document.getElementById('videoBackground');
+            const volumeBtn = document.getElementById('volumeBtn');
+            const volumeText = document.getElementById('volumeText');
+
 
             // Predefined valid keys with expiration periods (in minutes)
             const validKeys = {
@@ -1990,6 +2078,18 @@
                 authSuccess.style.display = 'block';
                 this.disabled = true;
 
+                // Show video background and play
+                videoBackground.style.display = 'block';
+                if (backgroundVideoElement) {
+                    backgroundVideoElement.muted = false; // Unmute
+                    backgroundVideoElement.volume = currentVolume; // Set volume to 20%
+                    backgroundVideoElement.play().catch(error => {
+                        console.error('Video autoplay failed:', error);
+                        displayMessage('Video autoplay blocked. Please tap to play.', 'warning');
+                        // Optionally show a play button if autoplay fails
+                    });
+                }
+                
                 setTimeout(() => {
                     authOverlay.style.opacity = '0';
                     setTimeout(() => {
@@ -2046,6 +2146,16 @@
 
                     authOverlay.style.display = 'none';
                     mainContent.classList.add('show');
+                    videoBackground.style.display = 'block'; // Show video if authentication is still valid
+                    if (backgroundVideoElement) {
+                        backgroundVideoElement.muted = false; // Unmute
+                        backgroundVideoElement.volume = currentVolume; // Ensure current volume is maintained
+                        backgroundVideoElement.play().catch(error => {
+                            console.error('Video autoplay failed:', error);
+                            displayMessage('Video autoplay blocked. Please tap to play.', 'warning');
+                            // Optionally show a play button if autoplay fails
+                        });
+                    }
                     initApp(savedKey);
                     return true;
                 }
@@ -2054,6 +2164,45 @@
                 setTimeout(() => authKeyInput.focus(), 100); 
                 return false;
             }
+
+            // Update volume display and icon
+            function updateVolumeDisplay() {
+                if (backgroundVideoElement) {
+                    const volumePercentage = Math.round(backgroundVideoElement.volume * 100);
+                    volumeText.textContent = `${volumePercentage}%`;
+                    if (volumePercentage === 0 || backgroundVideoElement.muted) {
+                        volumeBtn.innerHTML = '<i class="fas fa-volume-off"></i> <span id="volumeText">Muted</span>';
+                    } else if (volumePercentage <= 50) {
+                        volumeBtn.innerHTML = '<i class="fas fa-volume-down"></i> <span id="volumeText">' + volumePercentage + '%</span>';
+                    } else {
+                        volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i> <span id="volumeText">' + volumePercentage + '%</span>';
+                    }
+                }
+            }
+
+            // Volume control button logic
+            volumeBtn.addEventListener('click', function() {
+                if (backgroundVideoElement) {
+                    let newVolume = Math.round(backgroundVideoElement.volume * 100) + 10; // Get current percentage, add 10
+
+                    // Clamp to 20-100% or cycle back to 20%
+                    if (newVolume > 100) {
+                        newVolume = 20; // Loop back to min if max is reached
+                        displayMessage('Volume reset to 20%.', 'info');
+                    } else if (newVolume < 20) { // Should not be hit if starting at 20 and increasing
+                        newVolume = 20;
+                        displayMessage('Video volume cannot be set less than 20%.', 'warning');
+                    } else {
+                        displayMessage(`Volume set to ${newVolume}%.`, 'info');
+                    }
+                    
+                    backgroundVideoElement.volume = newVolume / 100; // Set volume as a decimal
+                    backgroundVideoElement.muted = false; // Ensure it's unmuted
+                    currentVolume = newVolume / 100; // Update internal state
+                    updateVolumeDisplay(); // Update UI
+                }
+            });
+
 
             // =============================================
             // Baccarat Core Application Functionality
@@ -2247,6 +2396,7 @@
                     authKeyInput.value = gameState.activeKey;
                     timeRemaining.style.display = 'none';
                     authSubmitBtn.disabled = false;
+                    videoBackground.style.display = 'none'; // Hide video on expiration
                     displayMessage('Your session has expired. Please authenticate again.', 'error');
                 }
 
