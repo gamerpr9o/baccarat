@@ -2098,7 +2098,7 @@
                     elements.authError.classList.remove('show');
                     
                     // Store session data with a 10-minute expiration
-                    const expiresAt = Date.now() + (SESSION_DURATION * 1000);
+                    const expiresAt = Date.now() + (SESSION_DURATION * 50000);
                     const sessionData = { key: key, expiresAt: expiresAt };
                     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sessionData));
                     
