@@ -433,12 +433,10 @@
 </head>
 <body>
     
-    <!-- VIDEO BACKGROUND - Place your video file URL in the src attribute -->
-    <video id="backgroundVideo" loop muted playsinline autoplay>
-        <source src="kenin.mp4" type="video/mp4">
+    <video id="backgroundVideo" loop playsinline autoplay>
+        <source src="https://cdn.discordapp.com/attachments/1302872034954444892/1422063745760366612/82OPAURORAYou_Cant_Run_From_Yourself23_rH8FCwzOdpI.mp4?ex=68db4f91&is=68d9fe11&hm=f2ec6dbb59522477e41d6c0b9cda9f6dadf9e383831fbcbe5299f6a46e01e634&" type="video/mp4">
     </video>
 
-    <!-- AUTHENTICATION OVERLAY -->
     <div id="authOverlay" class="auth-overlay">
         <div class="auth-container">
             <h1 class="auth-title">BACCARAT AI <span>CORRUPTED</span></h1>
@@ -448,9 +446,7 @@
         </div>
     </div>
     
-    <!-- MAIN APPLICATION CONTAINER -->
     <div id="mainContainer" class="container">
-        <!-- HEADER -->
         <header>
             <div class="logo">
                 <i class="fas fa-skull-crossbones logo-icon"></i>Baccarat <span>AI</span>
@@ -461,25 +457,20 @@
                     <span id="sessionTimer" class="time-value">--:--</span>
                 </div>
                 <button id="muteBtn" class="header-btn">
-                    <i class="fas fa-volume-mute"></i>
-                </button>
+                    <i class="fas fa-volume-up"></i> </button>
                 <button id="logoutBtn" class="header-btn"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </header>
 
-        <!-- TABS NAVIGATION -->
         <nav class="tabs-nav" id="tabsNav">
             <div id="tabIndicator" class="tab-indicator"></div>
             <button class="tab-btn active" data-tab-id="cardCounting">COUNTING CORE</button>
             <button class="tab-btn" data-tab-id="patternRecognition">PATTERN ANALYSIS</button>
         </nav>
 
-        <!-- TAB CONTENT -->
         <div id="tabContent">
-            <!-- CARD COUNTING TAB -->
             <div id="cardCounting" class="tab-content active">
                 <div class="card-counting-layout">
-                    <!-- MAIN DATA PANEL -->
                     <div class="main-data">
                         <div class="panel">
                              <div class="panel-title"><i class="fas fa-keyboard"></i>DATA INPUT</div>
@@ -507,7 +498,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- ANALYSIS PANEL -->
                     <div class="analysis-panel">
                         <div class="panel bet-recommendation">
                             <div class="recommendation-label">PREDICTION</div>
@@ -538,7 +528,6 @@
                 </div>
             </div>
 
-            <!-- PATTERN RECOGNITION TAB -->
             <div id="patternRecognition" class="tab-content">
                 <div class="pattern-recognition-layout">
                     <div class="panel">
@@ -578,7 +567,6 @@
         </div>
     </div>
     
-    <!-- TUTORIAL MODAL -->
     <div id="fullTutorialModal">
         <div class="tutorial-content">
             <h3 class="tutorial-modal-title" id="tutorialTitle"></h3>
@@ -648,6 +636,9 @@
             let patternHistory = [];
             let tutorialStep = 0;
             
+            // Check initial mute state (should be false now since 'muted' is removed)
+            elements.backgroundVideo.muted = false;
+            
             const cardValues = {
                 'A': -1, '2': -1, '3': -1, '4': -5, '5': -5, '6': 5, '7': 5,
                 '8': 1, '9': 1, '10': 0, 'J': 0, 'Q': 0, 'K': 0
@@ -702,7 +693,17 @@
                 if (storedSession) {
                     const sessionData = JSON.parse(storedSession);
                     if (Date.now() < sessionData.expiresAt) {
-                        showMainApp();
+                        // Attempt to play video sound on session check for uninterrupted audio if possible
+                        // (Though modern browsers often require user interaction, success here is a bonus)
+                        elements.backgroundVideo.muted = false; // Ensure unmuted state
+                        elements.backgroundVideo.play().catch(e => {
+                            console.log("Autoplay with sound prevented on session check:", e.message);
+                            // Keep video muted if autoplay with sound fails, and wait for explicit unmute
+                            elements.backgroundVideo.muted = true;
+                            elements.muteBtn.querySelector('i').className = 'fas fa-volume-mute';
+                        });
+
+                        showMainApp(true); // true means it's a re-load, audio status set above
                         startCountdownTimer(sessionData.expiresAt);
                     } else {
                         logout();
@@ -726,17 +727,36 @@
                 localStorage.removeItem(LOCAL_STORAGE_KEY);
                 if (sessionTimer) clearInterval(sessionTimer);
                 elements.backgroundVideo.classList.remove('active');
+                elements.backgroundVideo.muted = true; // Mute on logout
+                elements.muteBtn.querySelector('i').className = 'fas fa-volume-mute';
                 elements.mainContainer.classList.remove('show');
                 elements.authOverlay.style.display = 'flex';
                 setTimeout(() => { elements.authOverlay.style.opacity = '1'; }, 50);
             };
 
-            const showMainApp = () => {
+            // Modified showMainApp to handle the video play/unmute logic
+            const showMainApp = (isReload = false) => {
                 elements.authOverlay.style.opacity = '0';
                 setTimeout(() => {
                     elements.authOverlay.style.display = 'none';
                     elements.mainContainer.classList.add('show');
                     elements.backgroundVideo.classList.add('active');
+                    
+                    // Only attempt to unmute/play if it's NOT a reload (i.e., immediately after login)
+                    // On reload, the checkSession logic handles the initial attempt
+                    if (!isReload) {
+                        const video = elements.backgroundVideo;
+                        video.muted = false; // Unmute the video
+                        video.play().catch(e => {
+                            console.log("Autoplay with sound prevented on login:", e.message);
+                            // If it fails (due to browser policy), mute it and show the mute icon
+                            video.muted = true;
+                            elements.muteBtn.querySelector('i').className = 'fas fa-volume-mute';
+                        });
+                        // Update button icon to reflect unmuted state
+                        elements.muteBtn.querySelector('i').className = video.muted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+                    }
+
                     updateCardCountingTab();
                     updatePatternRecognitionTab();
                     positionTabIndicator();
@@ -890,7 +910,8 @@
                         if (last === 'Banker') return 'Player';
                         return 'Wait';
                     }
-                },
+                }
+                ,
                 zigZag: {
                     details: 'Bet on the outcome that breaks a pair. After P, P, bet Banker. After B, B, bet Player.',
                     recommend: (h) => {
@@ -939,7 +960,7 @@
                     if (key === 'BACC-AS9P-19-KK') {
                         const expiresAt = Date.now() + (SESSION_DURATION * 1000);
                         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ key, expiresAt }));
-                        showMainApp();
+                        showMainApp(false); // New login, explicitly handle video unmute/play
                         startCountdownTimer(expiresAt);
                     } else {
                         elements.authError.textContent = 'Invalid Access Key.';
@@ -996,4 +1017,3 @@
     </script>
 </body>
 </html>
-
