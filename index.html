@@ -397,11 +397,12 @@
         }
         .control-btn:hover { background: var(--primary-glow); box-shadow: 0 0 15px var(--primary-glow); }
 
-        /* Tutorial & Modals */
+        /* Tutorial & Modals - FIXES IMPLEMENTED HERE */
         #fullTutorialModal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(2, 1, 4, 0.8); display: none; justify-content: center;
-            align-items: center; z-index: 1200; backdrop-filter: blur(5px);
+            background: transparent; /* Correct: Keeps the area behind the text transparent */
+            display: none; justify-content: center;
+            align-items: center; z-index: 1201; /* High z-index for modal content */
         }
         .tutorial-content {
             background: var(--dark-bg); padding: 2rem;
@@ -418,12 +419,19 @@
         .tutorial-navigation button:hover { background: rgba(var(--accent-glow-rgb), 0.2); }
         
         .tutorial-highlight {
-            position: absolute; box-shadow: 0 0 0 9999px rgba(2, 1, 4, 0.7);
+            position: absolute; 
+            /* FIX: Revert box-shadow to create the dark mask with a cutout. */
+            box-shadow: 0 0 0 9999px rgba(2, 1, 4, 0.7); 
             border: 2px solid var(--accent-glow);
             transition: all 0.4s ease-in-out;
             pointer-events: none;
         }
-        .tutorial-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1199; }
+        .tutorial-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            pointer-events: none; 
+            z-index: 1200; /* Z-index is below modal content */
+            background: transparent; /* FIX: Remove the background from the container, let the highlight box's shadow do the masking */
+        }
         
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--dark-bg); }
@@ -624,7 +632,8 @@
                 tutorialText: document.getElementById('tutorialText'),
                 tutorialSkipBtn: document.getElementById('tutorialSkipBtn'),
                 tutorialNextBtn: document.getElementById('tutorialNextBtn'),
-                highlightBox: document.getElementById('highlightBox')
+                highlightBox: document.getElementById('highlightBox'),
+                tutorialOverlay: document.getElementById('tutorialOverlay')
             };
 
             let cardCount = 0;
@@ -769,33 +778,45 @@
             const startTutorial = () => {
                 tutorialStep = 0;
                 elements.fullTutorialModal.style.display = 'flex';
+                // Show the overlay mask container for the duration of the tutorial
+                elements.tutorialOverlay.style.display = 'block'; 
                 setTimeout(() => elements.fullTutorialModal.classList.add('show'), 10);
                 showTutorialStep(tutorialStep);
             };
+
+            const endTutorial = () => {
+                elements.fullTutorialModal.classList.remove('show');
+                setTimeout(() => {
+                    elements.fullTutorialModal.style.display = 'none';
+                    elements.tutorialOverlay.style.display = 'none'; // Hide the mask
+                }, 300);
+                elements.highlightBox.style.display = 'none';
+                localStorage.setItem(TUTORIAL_KEY, 'true');
+            };
+
 
             const showTutorialStep = (stepIndex) => {
                 const step = tutorialSteps[stepIndex];
                 elements.tutorialTitle.textContent = step.title;
                 elements.tutorialText.textContent = step.text;
                 elements.highlightBox.style.display = 'none';
+                
                 if (step.action) step.action();
-                if (step.element) {
-                    const rect = step.element.getBoundingClientRect();
-                    elements.highlightBox.style.width = `${rect.width + 20}px`;
-                    elements.highlightBox.style.height = `${rect.height + 20}px`;
-                    elements.highlightBox.style.top = `${rect.top - 10}px`;
-                    elements.highlightBox.style.left = `${rect.left - 10}px`;
-                    elements.highlightBox.style.display = 'block';
-                }
-                elements.tutorialNextBtn.textContent = (stepIndex === tutorialSteps.length - 1) ? 'Finish' : 'Next';
+
+                // Wait a moment for layout update after tab switch
+                setTimeout(() => {
+                    if (step.element) {
+                        const rect = step.element.getBoundingClientRect();
+                        elements.highlightBox.style.width = `${rect.width + 20}px`;
+                        elements.highlightBox.style.height = `${rect.height + 20}px`;
+                        elements.highlightBox.style.top = `${rect.top - 10}px`;
+                        elements.highlightBox.style.left = `${rect.left - 10}px`;
+                        elements.highlightBox.style.display = 'block';
+                    }
+                    elements.tutorialNextBtn.textContent = (stepIndex === tutorialSteps.length - 1) ? 'Finish' : 'Next';
+                }, 100);
             };
 
-            const endTutorial = () => {
-                elements.fullTutorialModal.classList.remove('show');
-                setTimeout(() => elements.fullTutorialModal.style.display = 'none', 300);
-                elements.highlightBox.style.display = 'none';
-                localStorage.setItem(TUTORIAL_KEY, 'true');
-            };
 
             elements.tutorialNextBtn.addEventListener('click', () => {
                 tutorialStep++;
