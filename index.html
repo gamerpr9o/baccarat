@@ -3,1038 +3,447 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baccarat AI - Corrupted Core Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Baccarat AI | Oracle Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@100;300;400;600;700&family=JetBrains+Mono:wght@300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /*
-         * THEME OVERHAUL V3: CORRUPTED CORE
-         * Based on the user-provided image.
-         * Dark, menacing aesthetic with smoky reds and a piercing cyan accent.
-         * Focus on glitch animations, sharp angular design, and an intense atmosphere.
-         */
         :root {
-            --primary-glow: #b41414; /* Smoky, deep red */
-            --primary-glow-rgb: 180, 20, 20;
-            --accent-glow: #25f5f1;  /* Piercing cyan */
-            --accent-glow-rgb: 37, 245, 241;
-            --dark-bg: #020104;      /* Near-black with a hint of color */
-            --panel-bg: rgba(6, 4, 15, 0.6);
-            --panel-border: rgba(37, 245, 241, 0.2);
-            --text-color: #e1e1e1;
-            --text-secondary: #868ca1;
-            --success: #2ECC71;
-            --danger: #e74c3c;
-            --warning: #F1C40F;
-            --player-blue: #3498DB;
-
-            --transition-main: all 0.5s cubic-bezier(0.1, 0.7, 0.3, 1);
-            --transition-fast: all 0.2s ease-out;
+            --bg: #030305;
+            --accent: #6d28d9; /* Deep Purple */
+            --player: #0ea5e9; /* Electric Blue */
+            --banker: #f43f5e; /* Rose Red */
+            --glass: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-dim: #64748b;
+            --transition-fluid: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        @keyframes glitch-text {
-            0%, 100% {
-                text-shadow: 0.05em 0 0 rgba(var(--accent-glow-rgb), 0.75), -0.05em 0 0 rgba(var(--primary-glow-rgb), 0.75);
-                clip-path: inset(90% 0 1% 0);
-            }
-            25% {
-                clip-path: inset(10% 0 80% 0);
-            }
-            50% {
-                clip-path: inset(40% 0 40% 0);
-            }
-            75% {
-                clip-path: inset(80% 0 5% 0);
-            }
-        }
-        
-        @keyframes flicker-glow {
-            0%, 100% {
-                box-shadow: 0 0 10px var(--primary-glow), 0 0 20px var(--primary-glow), inset 0 0 5px rgba(var(--primary-glow-rgb), 0.5);
-                opacity: 0.8;
-            }
-            50% {
-                box-shadow: 0 0 15px var(--primary-glow), 0 0 30px var(--primary-glow), inset 0 0 8px rgba(var(--primary-glow-rgb), 0.5);
-                opacity: 1;
-            }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Montserrat', sans-serif;
-            background: var(--dark-bg);
-            color: var(--text-color);
-            min-height: 100vh;
+            font-family: 'Sora', sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            height: 100vh;
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
             user-select: none;
         }
 
-        #backgroundVideo {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
-            height: auto;
-            z-index: -1;
-            transform: translateX(-50%) translateY(-50%);
-            background-size: cover;
-            transition: 1s opacity;
-            opacity: 0;
-            filter: grayscale(50%) brightness(0.5);
+        /* --- IMMERSIVE BACKGROUND --- */
+        #video-wrap {
+            position: fixed; inset: 0; z-index: -2;
+            overflow: hidden; transition: filter 1s ease;
+        }
+        #bg-video {
+            width: 100%; height: 100%; object-fit: cover;
+            opacity: 0.35; filter: contrast(1.1) brightness(0.7);
+        }
+        .vignette {
+            position: fixed; inset: 0; z-index: -1;
+            background: radial-gradient(circle at center, transparent 20%, rgba(3, 3, 5, 0.9) 100%);
         }
 
-        #backgroundVideo.active {
-            opacity: 0.3;
-        }
-
-
-        /*
-         * AUTHENTICATION OVERLAY V3
-         * Intense, glitchy, and menacing.
-         */
+        /* --- AUTHENTICATION (MINIMALIST) --- */
         .auth-overlay {
-            position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: var(--dark-bg);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 1000; opacity: 1;
-            transition: opacity 1s ease;
+            position: fixed; inset: 0; z-index: 2000;
+            background: #030305; display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.8, 0, 0.2, 1);
         }
-        .auth-container {
-            background: var(--panel-bg);
-            padding: 3rem;
-            border: 1px solid var(--panel-border);
-            width: 90%; max-width: 500px;
-            box-shadow: 0 0 50px rgba(var(--primary-glow-rgb), 0.7);
-            text-align: center;
-            backdrop-filter: blur(10px);
-            animation: fadeIn 1s ease-out;
-            clip-path: polygon(0 10px, 10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+        .auth-box {
+            width: 100%; max-width: 400px; padding: 40px; text-align: center;
+            animation: fadeIn 1s ease;
         }
-
-        .auth-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem; margin-bottom: 2.5rem;
-            color: var(--text-color); font-weight: 900;
-            letter-spacing: 4px; text-transform: uppercase;
-        }
-        .auth-title span {
-            color: var(--text-color);
-            animation: glitch-text 2s infinite steps(1);
-            display: inline-block;
-        }
-
+        .auth-box h1 { font-weight: 100; letter-spacing: 12px; margin-bottom: 40px; color: var(--text-main); }
         .auth-input {
-            width: 100%; padding: 1.2rem;
-            border: 2px solid var(--panel-border);
-            background: rgba(0,0,0, 0.3);
-            color: var(--accent-glow);
-            font-size: 1.2rem; transition: var(--transition-main);
-            outline: none; font-family: 'Orbitron', sans-serif;
-            letter-spacing: 3px; text-align: center;
-            margin-bottom: 2rem;
+            width: 100%; background: none; border: none; border-bottom: 1px solid var(--glass-border);
+            padding: 15px; color: white; font-size: 1.2rem; text-align: center; outline: none;
+            margin-bottom: 30px; transition: var(--transition-fluid); letter-spacing: 4px;
         }
-        .auth-input:focus {
-            border-color: var(--accent-glow);
-            box-shadow: 0 0 20px var(--accent-glow), inset 0 0 10px rgba(var(--accent-glow-rgb), 0.2);
-        }
-        .auth-input::placeholder { color: rgba(var(--accent-glow-rgb), 0.4); }
+        .auth-input:focus { border-color: var(--player); letter-spacing: 8px; }
 
-        .auth-btn {
-            background: transparent;
-            color: var(--accent-glow); border: 2px solid var(--accent-glow);
-            padding: 1.2rem 2.5rem;
-            font-size: 1.1rem; font-weight: 700; cursor: pointer;
-            transition: var(--transition-fast);
-            width: 100%;
-            text-transform: uppercase; letter-spacing: 2px;
-            position: relative;
-            box-shadow: 0 0 15px rgba(var(--accent-glow-rgb), 0.5);
+        /* --- APP STRUCTURE --- */
+        .app-shell {
+            height: 100vh; display: grid; grid-template-rows: auto 1fr;
+            padding: 30px; gap: 30px; opacity: 0; transform: scale(1.05);
+            transition: opacity 1s ease, transform 1s cubic-bezier(0.1, 0.8, 0.2, 1);
         }
-        .auth-btn:hover {
-            background: rgba(var(--accent-glow-rgb), 0.2);
-            box-shadow: 0 0 25px var(--accent-glow);
-        }
-        .auth-btn.authorizing {
-            animation: glitch-text 0.5s infinite;
-        }
-        
-        .auth-error {
-            margin-top: 1.5rem; font-size: 1rem;
-            display: none; padding: 1rem;
-            color: var(--danger);
-            background-color: rgba(231, 76, 60, 0.1);
-            border: 1px solid var(--danger);
-            animation: fadeIn 0.5s;
-        }
-        .auth-error.show { display: block; }
-        
-        /*
-         * MAIN APPLICATION UI V3
-         */
-        .container {
-            width: 100%; max-width: 1800px; margin: 0 auto;
-            padding: 2rem; display: none;
-            animation: fadeIn 1s 0.5s ease-out forwards;
-            opacity: 0;
-            height: 100vh;
-            overflow-y: auto;
-        }
-        .container.show { display: block; }
-        
+        .app-shell.active { opacity: 1; transform: scale(1); }
+
         header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 2rem; padding-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(var(--primary-glow-rgb), 0.5);
+            padding: 0 10px;
         }
-        .logo {
-            font-family: 'Orbitron', sans-serif; font-size: 2.5rem;
-            font-weight: 900; display: flex; align-items: center;
-        }
-        .logo span {
-            color: var(--primary-glow);
-            text-shadow: 0 0 10px var(--primary-glow);
-        }
-        .logo-icon { margin-right: 0.8rem; color: var(--primary-glow); }
-        
-        .header-right { display: flex; align-items: center; gap: 1.5rem; }
-        .time-info {
-            font-size: 0.9rem; font-weight: 600;
-            border: 1px solid var(--panel-border);
-            background: rgba(0,0,0,0.3);
-            padding: 0.6rem 1.2rem;
-            backdrop-filter: blur(5px);
-        }
-        .time-value { color: var(--warning); }
-        
-        .header-btn {
-            background: transparent; border: 1px solid var(--panel-border);
-            color: var(--text-secondary); padding: 0.6rem 1.2rem;
-            font-size: 0.9rem; cursor: pointer;
-            transition: var(--transition-fast);
-        }
-        .header-btn:hover {
-            color: var(--accent-glow);
-            border-color: var(--accent-glow);
-            box-shadow: 0 0 10px var(--accent-glow);
+        .logo { font-weight: 700; font-size: 1.2rem; letter-spacing: 4px; text-transform: uppercase; }
+        .logo span { font-weight: 200; opacity: 0.5; }
+
+        .sys-status { display: flex; gap: 30px; align-items: center; }
+        .status-item { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+        .status-item span { color: var(--player); margin-left: 8px; }
+
+        /* --- MAIN DASHBOARD --- */
+        .dashboard {
+            display: grid; grid-template-columns: 320px 1fr 320px; gap: 30px;
         }
 
-        /* Tabs Navigation */
-        .tabs-nav {
-            display: flex; justify-content: center; margin-bottom: 2.5rem;
-            gap: 0.5rem; position: relative;
-        }
-        .tab-indicator {
-            position: absolute; bottom: -5px; height: 2px;
-            background: var(--accent-glow);
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-            box-shadow: 0 0 10px var(--accent-glow);
-        }
-        .tab-btn {
-            background: transparent; color: var(--text-secondary);
-            padding: 0.8rem 1.5rem;
-            font-weight: 700; cursor: pointer;
-            transition: var(--transition-fast);
-            border: none; font-size: 1rem; position: relative;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        .tab-btn:hover { color: var(--text-color); }
-        .tab-btn.active { color: var(--accent-glow); }
-
-        .tab-content { display: none; animation: fadeIn 0.8s ease-out; }
-        .tab-content.active { display: block; }
-
-        /* Panel Styles */
         .panel {
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            padding: 2rem; margin-bottom: 2rem;
-            backdrop-filter: blur(10px);
-            position: relative;
-            transition: var(--transition-main);
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.7);
+            background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: 32px; padding: 30px; backdrop-filter: blur(20px);
+            display: flex; flex-direction: column; opacity: 0; transform: translateY(20px);
         }
-        .panel:hover {
-            border-color: rgba(var(--primary-glow-rgb), 0.7);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 20px rgba(var(--primary-glow-rgb), 0.4);
-        }
+        .panel.show { opacity: 1; transform: translateY(0); transition: all 0.8s ease; }
 
         .panel-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.5rem; font-weight: 700;
-            margin-bottom: 1.5rem; display: flex; align-items: center;
-            letter-spacing: 1px;
-            color: var(--text-color);
-        }
-        .panel-title i { margin-right: 0.8rem; color: var(--primary-glow); }
-
-        /* Card Counting Layout */
-        .card-counting-layout {
-            display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;
-        }
-        @media (max-width: 1024px) { .card-counting-layout { grid-template-columns: 1fr; } }
-        
-        .card-selection-area {
-            display: grid; grid-template-columns: repeat(7, 1fr);
-            gap: 0.8rem; margin-bottom: 1.5rem;
-        }
-        .card-btn {
-            background: rgba(0,0,0,0.2);
-            border: 1px solid var(--panel-border);
-            height: 60px; display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; font-weight: 700;
-            cursor: pointer; transition: var(--transition-fast);
-            font-family: 'Orbitron', sans-serif;
-            color: var(--text-secondary);
-        }
-        .card-btn:hover {
-            transform: translateY(-3px);
-            background: rgba(var(--accent-glow-rgb), 0.1);
-            color: var(--accent-glow);
-            border-color: var(--accent-glow);
-            box-shadow: 0 0 15px rgba(var(--accent-glow-rgb), 0.5);
-        }
-        
-        .chart-area {
-            height: 300px; position: relative; width: 100%;
-            background: rgba(0,0,0,0.2);
-            padding: 1rem; border: 1px solid var(--panel-border);
+            font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 3px; color: var(--text-dim); margin-bottom: 30px;
+            display: flex; align-items: center; justify-content: space-between;
         }
 
-        /* Recommendation & Count Panels */
-        .bet-recommendation {
-            text-align: center; display: flex; flex-direction: column;
-            justify-content: center; min-height: 150px;
-            border: 1px solid rgba(var(--primary-glow-rgb), 0.5);
-            animation: flicker-glow 3s infinite;
+        /* --- CARD GRID --- */
+        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .card-node {
+            aspect-ratio: 1/1; background: rgba(255,255,255,0.03);
+            border: 1px solid transparent; border-radius: 16px;
+            color: white; font-size: 1.2rem; font-weight: 600; cursor: pointer;
+            transition: var(--transition-fluid); display: flex; align-items: center; justify-content: center;
         }
-        .recommendation-label { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
-        .bet-suggestion {
-            font-family: 'Orbitron', sans-serif; font-size: 2.5rem;
-            font-weight: 900; line-height: 1.1;
+        .card-node:hover {
+            background: rgba(255,255,255,0.1); border-color: var(--player);
+            transform: scale(1.1) rotate(5deg);
         }
-        .bet-amount { font-size: 1rem; color: var(--text-secondary); margin-top: 0.5rem; }
-        
-        .count-info { border-left: 3px solid var(--accent-glow); }
-        .count-result-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 3.5rem; font-weight: 900; color: var(--accent-glow);
-            text-shadow: 0 0 15px var(--accent-glow);
-        }
-        
-        /* Stats & History */
-        .stats-container {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;
-        }
-        .stat-box {
-            background: rgba(0,0,0,0.3); padding: 1rem; text-align: center;
-            border: 1px solid var(--panel-border);
-        }
-        .stat-value {
-            font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;
-            color: var(--primary-glow); font-family: 'Orbitron', sans-serif;
-        }
-        .stat-label { font-size: 0.9rem; color: var(--text-secondary); }
 
-        .history-list {
-            display: flex; flex-direction: column; gap: 0.5rem;
-            max-height: 200px; overflow-y: auto; padding-right: 10px;
+        /* --- THE ORACLE CORE (CENTER PIECE) --- */
+        .oracle-center {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative;
         }
-        .history-item {
-            background: rgba(var(--accent-glow-rgb),0.05); padding: 0.8rem;
-            font-size: 0.9rem; border-left: 2px solid var(--accent-glow);
-            animation: fadeIn 0.5s;
+        .oracle-orb {
+            width: 280px; height: 280px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 70%);
+            box-shadow: inset 0 0 50px rgba(255,255,255,0.05), 0 0 40px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            position: relative; transition: var(--transition-fluid);
         }
-        
-        /* Pattern Recognition Tab */
-        .pattern-recognition-layout {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
+        .oracle-orb::before {
+            content: ''; position: absolute; inset: -15px;
+            border: 1px solid var(--glass-border); border-radius: 50%;
+            animation: rotate 10s linear infinite;
         }
-        @media (max-width: 768px) { .pattern-recognition-layout { grid-template-columns: 1fr; } }
-        
+        .orb-glow {
+            position: absolute; width: 60%; height: 60%;
+            border-radius: 50%; filter: blur(40px);
+            background: var(--player); opacity: 0.3;
+            transition: all 1s ease;
+        }
+
+        #prediction-text {
+            font-size: 3.5rem; font-weight: 700; letter-spacing: 10px;
+            text-transform: uppercase; z-index: 10;
+            transition: var(--transition-fluid);
+        }
+
+        /* --- PATTERN ENGINE --- */
+        .pattern-list { display: grid; gap: 15px; }
         .pattern-card {
-            border: 1px solid var(--panel-border);
-            padding: 1.5rem; cursor: pointer; text-align: center;
-            transition: var(--transition-fast); background: rgba(0,0,0,0.2);
+            padding: 20px; border-radius: 20px; background: rgba(255,255,255,0.02);
+            border: 1px solid var(--glass-border); cursor: pointer; transition: var(--transition-fluid);
         }
-        .pattern-card:hover { transform: translateY(-5px); background: rgba(var(--accent-glow-rgb), 0.1); border-color: var(--accent-glow); }
-        .pattern-card.active { border-color: var(--accent-glow); box-shadow: 0 0 15px var(--accent-glow); transform: scale(1.05); }
-        .pattern-card-title { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; }
-        .pattern-card.active .pattern-card-title { color: var(--accent-glow); }
+        .pattern-card.active { border-color: var(--player); background: rgba(14, 165, 233, 0.05); }
+        .pattern-card h4 { font-size: 0.9rem; margin-bottom: 5px; }
+        .pattern-card p { font-size: 0.7rem; color: var(--text-dim); }
 
-        .last-bet-buttons { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
-        .last-bet-btn {
-            background: transparent; color: var(--text-color);
-            border: 1px solid var(--panel-border); padding: 0.8rem 1.5rem;
-            font-size: 1rem; font-weight: 700;
-            cursor: pointer; transition: var(--transition-fast); flex-grow: 1;
+        .logger { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: auto; }
+        .log-btn {
+            height: 60px; border-radius: 12px; border: none; cursor: pointer;
+            font-weight: 700; font-size: 0.8rem; transition: var(--transition-fluid);
         }
-        .last-bet-btn:hover { transform: translateY(-3px); }
-        .last-bet-btn.player:hover { border-color: var(--player-blue); box-shadow: 0 0 10px var(--player-blue); color: var(--player-blue); }
-        .last-bet-btn.banker:hover { border-color: var(--danger); box-shadow: 0 0 10px var(--danger); color: var(--danger); }
-        .last-bet-btn.tie:hover { border-color: var(--warning); box-shadow: 0 0 10px var(--warning); color: var(--warning); }
-        
-        .control-btn {
-            background: rgba(var(--primary-glow-rgb), 0.2); border: 1px solid var(--primary-glow);
-            color: var(--text-color); padding: 0.6rem 1rem;
-            cursor: pointer; transition: var(--transition-fast);
-        }
-        .control-btn:hover { background: var(--primary-glow); box-shadow: 0 0 15px var(--primary-glow); }
+        .log-btn.p { background: var(--player); color: white; }
+        .log-btn.b { background: var(--banker); color: white; }
+        .log-btn.t { background: #facc15; color: black; }
+        .log-btn:hover { transform: translateY(-5px); filter: brightness(1.2); }
 
-        /* Tutorial & Modals - FIXES IMPLEMENTED HERE */
-        #fullTutorialModal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: transparent; /* Correct: Keeps the area behind the text transparent */
-            display: none; justify-content: center;
-            align-items: center; z-index: 1201; /* High z-index for modal content */
+        /* --- ANIMATIONS --- */
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.2); opacity: 0.5; } 100% { transform: scale(1); opacity: 0.3; } }
+
+        /* --- UI UTILS --- */
+        .btn-ghost {
+            background: none; border: 1px solid var(--glass-border);
+            color: var(--text-dim); padding: 8px 16px; border-radius: 100px;
+            cursor: pointer; transition: var(--transition-fluid); font-size: 0.7rem;
         }
-        .tutorial-content {
-            background: var(--dark-bg); padding: 2rem;
-            border: 1px solid var(--accent-glow); box-shadow: 0 0 30px var(--accent-glow);
-            width: 90%; max-width: 600px; text-align: center;
-            transform: scale(0.9); opacity: 0; transition: all 0.3s ease-in-out;
-        }
-        #fullTutorialModal.show .tutorial-content { transform: scale(1); opacity: 1; }
-        .tutorial-modal-title { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: var(--accent-glow); margin-bottom: 1rem; }
-        .tutorial-navigation button {
-            background: transparent; color: var(--accent-glow); border: 1px solid var(--accent-glow);
-            padding: 0.8rem 2rem; cursor: pointer; font-weight: 700; transition: var(--transition-fast);
-        }
-        .tutorial-navigation button:hover { background: rgba(var(--accent-glow-rgb), 0.2); }
+        .btn-ghost:hover { border-color: white; color: white; }
         
-        .tutorial-highlight {
-            position: absolute; 
-            /* FIX: Revert box-shadow to create the dark mask with a cutout. */
-            box-shadow: 0 0 0 9999px rgba(2, 1, 4, 0.7); 
-            border: 2px solid var(--accent-glow);
-            transition: all 0.4s ease-in-out;
-            pointer-events: none;
-        }
-        .tutorial-overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            pointer-events: none; 
-            z-index: 1200; /* Z-index is below modal content */
-            background: transparent; /* FIX: Remove the background from the container, let the highlight box's shadow do the masking */
-        }
-        
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--dark-bg); }
-        ::-webkit-scrollbar-thumb { background: var(--primary-glow); }
-        
+        #chart-mini { height: 120px; width: 100%; margin-top: auto; }
+
     </style>
 </head>
 <body>
-    
-    <video id="backgroundVideo" loop playsinline autoplay>
-        <source src="kenin.mp4" type="video/mp4">
-    </video>
 
-    <div id="authOverlay" class="auth-overlay">
-        <div class="auth-container">
-            <h1 class="auth-title">BACCARAT AI <span>CORRUPTED</span></h1>
-            <input type="password" id="keyInput" class="auth-input" placeholder="ACCESS KEY">
-            <button id="authBtn" class="auth-btn">Authorize</button>
-            <p id="authError" class="auth-error"></p>
+    <div id="video-wrap">
+        <video id="bg-video" loop playsinline autoplay muted>
+            <source src="kenin.mp4" type="video/mp4">
+        </video>
+    </div>
+    <div class="vignette"></div>
+
+    <!-- AUTHENTICATION -->
+    <div id="auth-screen" class="auth-overlay">
+        <div class="auth-box">
+            <h1>ORACLE</h1>
+            <input type="password" id="key-input" class="auth-input" placeholder="KEY_CODE">
+            <button id="login-btn" class="btn-ghost" style="width: 100%; padding: 15px; border-radius: 12px;">AUTHORIZE ACCESS</button>
+            <p id="err" style="color: var(--banker); margin-top: 20px; font-size: 0.8rem; display: none;">INVALID_KEY</p>
         </div>
     </div>
-    
-    <div id="mainContainer" class="container">
+
+    <!-- MAIN APP -->
+    <div id="app-shell" class="app-shell">
         <header>
-            <div class="logo">
-                <i class="fas fa-skull-crossbones logo-icon"></i>Baccarat <span>AI</span>
-            </div>
-            <div class="header-right">
-                <div class="time-info">
-                    <span>Time Left: </span>
-                    <span id="sessionTimer" class="time-value">--:--</span>
-                </div>
-                <button id="muteBtn" class="header-btn">
-                    <i class="fas fa-volume-up"></i> </button>
-                <button id="logoutBtn" class="header-btn"><i class="fas fa-sign-out-alt"></i></button>
+            <div class="logo">BAC AI <span>AI</span></div>
+            <div class="sys-status">
+                <div class="status-item">UPLINK: <span id="timer">00:00:00</span></div>
+                <div class="status-item">ENGINE: <span>STABLE</span></div>
+                <button id="mute-btn" class="btn-ghost"><i class="fas fa-volume-up"></i></button>
+                <button id="exit-btn" class="btn-ghost" style="border-color: var(--banker);">EXIT</button>
             </div>
         </header>
 
-        <nav class="tabs-nav" id="tabsNav">
-            <div id="tabIndicator" class="tab-indicator"></div>
-            <button class="tab-btn active" data-tab-id="cardCounting">COUNTING CORE</button>
-            <button class="tab-btn" data-tab-id="patternRecognition">PATTERN ANALYSIS</button>
-        </nav>
-
-        <div id="tabContent">
-            <div id="cardCounting" class="tab-content active">
-                <div class="card-counting-layout">
-                    <div class="main-data">
-                        <div class="panel">
-                             <div class="panel-title"><i class="fas fa-keyboard"></i>DATA INPUT</div>
-                            <div class="card-selection-area">
-                                <button class="card-btn" data-card="A">A</button>
-                                <button class="card-btn" data-card="2">2</button>
-                                <button class="card-btn" data-card="3">3</button>
-                                <button class="card-btn" data-card="4">4</button>
-                                <button class="card-btn" data-card="5">5</button>
-                                <button class="card-btn" data-card="6">6</button>
-                                <button class="card-btn" data-card="7">7</button>
-                                <button class="card-btn" data-card="8">8</button>
-                                <button class="card-btn" data-card="9">9</button>
-                                <button class="card-btn" data-card="10">10</button>
-                                <button class="card-btn" data-card="J">J</button>
-                                <button class="card-btn" data-card="Q">Q</button>
-                                <button class="card-btn" data-card="K">K</button>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                                 <h3 style="font-family:'Orbitron', sans-serif">COUNT HISTORY</h3>
-                                 <button class="control-btn" id="resetChartBtn"><i class="fas fa-redo"></i> RESET</button>
-                            </div>
-                            <div class="chart-area" id="chartArea">
-                                <canvas id="cardCountChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="analysis-panel">
-                        <div class="panel bet-recommendation">
-                            <div class="recommendation-label">PREDICTION</div>
-                            <p class="bet-suggestion" id="betSuggestion">Tie</p>
-                            <p class="bet-amount" id="betAmount">Zero Count (Sit out or Tie)</p>
-                        </div>
-                        <div class="panel count-info">
-                            <div class="panel-title"><i class="fas fa-calculator"></i>LIVE COUNT</div>
-                            <h2 id="currentCount" class="count-result-value">0</h2>
-                            <p id="countDescription" class="count-desc">Current Count Tier: Zero Count</p>
-                        </div>
-                        <div class="panel">
-                            <div class="panel-title"><i class="fas fa-server"></i>SESSION DATA</div>
-                            <div class="stats-container" id="statsContainer">
-                                <div class="stat-box">
-                                    <h3 class="stat-value" id="cardsCounted">0</h3>
-                                    <p class="stat-label">Cards Counted</p>
-                                </div>
-                                <div class="stat-box">
-                                    <h3 class="stat-value" id="decksRemaining">--</h3>
-                                    <p class="stat-label">Decks Left</p>
-                                </div>
-                            </div>
-                            <h4 style="font-family: 'Orbitron', sans-serif; margin-bottom: 1rem;">INPUT LOG</h4>
-                            <div class="history-list" id="historyList"></div>
-                        </div>
+        <main class="dashboard">
+            <!-- INPUTS -->
+            <section class="panel" id="panel-1">
+                <div class="panel-title">Data Ingestion <i class="fas fa-fingerprint"></i></div>
+                <div class="card-grid" id="card-grid">
+                    <!-- JS Generated -->
+                </div>
+                <button id="reset-btn" class="btn-ghost" style="margin-top: 30px;">PURGE SESSION DATA</button>
+                <div style="margin-top: auto;">
+                    <div class="status-item" style="margin-bottom: 10px;">SIGNAL_HISTORY</div>
+                    <div id="log-list" style="height: 100px; overflow-y: auto; font-family: 'JetBrains Mono'; font-size: 0.6rem; color: var(--text-dim);">
+                        <!-- Mini Logs -->
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div id="patternRecognition" class="tab-content">
-                <div class="pattern-recognition-layout">
-                    <div class="panel">
-                        <div class="panel-title"><i class="fas fa-magnifying-glass-chart"></i>PATTERN SELECTION</div>
-                        <p class="text-secondary" style="margin-bottom: 1.5rem;">Select a pattern, then log the last winning hand to generate a recommendation.</p>
-                        <div class="pattern-selection" id="patternSelection">
-                            <div class="pattern-card active" data-pattern="streaks">
-                                <h4 class="pattern-card-title">Streaks</h4>
-                            </div>
-                            <div class="pattern-card" data-pattern="choppy">
-                                <h4 class="pattern-card-title">Choppy</h4>
-                            </div>
-                            <div class="pattern-card" data-pattern="zigZag">
-                                <h4 class="pattern-card-title">Zig Zag</h4>
-                            </div>
-                        </div>
-                         <div class="panel-title" style="margin-top: 2rem; margin-bottom: 1rem;"><i class="fas fa-pencil-alt"></i>LOG LAST RESULT</div>
-                        <div class="last-bet-buttons">
-                            <button class="last-bet-btn player" data-result="Player">Player Won</button>
-                            <button class="last-bet-btn banker" data-result="Banker">Banker Won</button>
-                            <button class="last-bet-btn tie" data-result="Tie">Tie</button>
-                        </div>
+            <!-- THE CORE -->
+            <section class="oracle-center">
+                <div class="oracle-orb">
+                    <div id="glow" class="orb-glow"></div>
+                    <div id="prediction-text">WAIT</div>
+                </div>
+                <div style="margin-top: 50px; text-align: center;">
+                    <div style="font-size: 0.7rem; letter-spacing: 5px; color: var(--text-dim); margin-bottom: 10px;">SIGNAL CONFIDENCE</div>
+                    <div id="confidence-bar" style="width: 200px; height: 2px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+                        <div id="conf-fill" style="width: 0%; height: 100%; background: var(--player); transition: width 1s ease;"></div>
                     </div>
-                    <div class="pattern-info">
-                        <div class="panel">
-                            <div class="panel-title"><i class="fas fa-info-circle"></i>STRATEGY</div>
-                            <p class="pattern-details-text" id="patternDetailsText"></p>
-                        </div>
-                        <div class="panel bet-recommendation">
-                            <div class="recommendation-label">NEXT BET</div>
-                            <p id="patternBetSuggestion" class="bet-suggestion">Wait</p>
-                            <p id="patternBetAmount" class="bet-amount"></p>
-                        </div>
+                    <div id="conf-val" style="font-family: 'JetBrains Mono'; font-size: 0.8rem; margin-top: 10px; color: var(--player);">0%</div>
+                </div>
+            </section>
+
+            <!-- PATTERNS -->
+            <section class="panel" id="panel-2">
+                <div class="panel-title">Neural Patterns <i class="fas fa-project-diagram"></i></div>
+                <div class="pattern-list">
+                    <div class="pattern-card active" data-algo="trend">
+                        <h4>TREND_LOGIC</h4>
+                        <p>Aggressive momentum tracking.</p>
+                    </div>
+                    <div class="pattern-card" data-algo="reversal">
+                        <h4>REVERSAL_SCAN</h4>
+                        <p>Counter-streak identification.</p>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    
-    <div id="fullTutorialModal">
-        <div class="tutorial-content">
-            <h3 class="tutorial-modal-title" id="tutorialTitle"></h3>
-            <p class="tutorial-modal-text" id="tutorialText"></p>
-            <div class="tutorial-navigation" style="display: flex; justify-content: center; gap: 1rem;">
-                <button id="tutorialSkipBtn">Skip</button>
-                <button id="tutorialNextBtn">Next</button>
-            </div>
-        </div>
-    </div>
-    
-    <div id="tutorialOverlay" class="tutorial-overlay">
-        <div id="highlightBox" class="tutorial-highlight" style="display: none;"></div>
+                
+                <div style="margin-top: 40px; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+                    <div class="panel-title">Manual Result Log</div>
+                    <div class="logger">
+                        <button class="log-btn p" data-res="P">P</button>
+                        <button class="log-btn t" data-res="T">T</button>
+                        <button class="log-btn b" data-res="B">B</button>
+                    </div>
+                </div>
+
+                <div id="chart-mini">
+                    <canvas id="volatility-chart"></canvas>
+                </div>
+            </section>
+        </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const elements = {
-                authOverlay: document.getElementById('authOverlay'),
-                keyInput: document.getElementById('keyInput'),
-                authBtn: document.getElementById('authBtn'),
-                authError: document.getElementById('authError'),
-                mainContainer: document.getElementById('mainContainer'),
-                backgroundVideo: document.getElementById('backgroundVideo'),
-                tabsNav: document.getElementById('tabsNav'),
-                tabBtns: document.querySelectorAll('.tab-btn'),
-                tabContents: document.querySelectorAll('.tab-content'),
-                tabIndicator: document.getElementById('tabIndicator'),
-                sessionTimerDisplay: document.getElementById('sessionTimer'),
-                logoutBtn: document.getElementById('logoutBtn'),
-                muteBtn: document.getElementById('muteBtn'),
-                cardCountingTabBtn: document.querySelector('[data-tab-id="cardCounting"]'),
-                cardSelectionArea: document.querySelector('.card-selection-area'),
-                cardBtns: document.querySelectorAll('.card-btn'),
-                resetChartBtn: document.getElementById('resetChartBtn'),
-                cardCountChartCanvas: document.getElementById('cardCountChart'),
-                betSuggestion: document.getElementById('betSuggestion'),
-                betAmount: document.getElementById('betAmount'),
-                currentCount: document.getElementById('currentCount'),
-                countDescription: document.getElementById('countDescription'),
-                countInfoPanel: document.querySelector('.count-info'),
-                cardsCounted: document.getElementById('cardsCounted'),
-                decksRemaining: document.getElementById('decksRemaining'),
-                historyList: document.getElementById('historyList'),
-                patternRecognitionTabBtn: document.querySelector('[data-tab-id="patternRecognition"]'),
-                patternSelection: document.getElementById('patternSelection'),
-                patternDetailsText: document.getElementById('patternDetailsText'),
-                patternCards: document.querySelectorAll('.pattern-card'),
-                lastBetBtns: document.querySelectorAll('.last-bet-btn'),
-                patternBetSuggestion: document.getElementById('patternBetSuggestion'),
-                patternBetAmount: document.getElementById('patternBetAmount'),
-                fullTutorialModal: document.getElementById('fullTutorialModal'),
-                tutorialTitle: document.getElementById('tutorialTitle'),
-                tutorialText: document.getElementById('tutorialText'),
-                tutorialSkipBtn: document.getElementById('tutorialSkipBtn'),
-                tutorialNextBtn: document.getElementById('tutorialNextBtn'),
-                highlightBox: document.getElementById('highlightBox'),
-                tutorialOverlay: document.getElementById('tutorialOverlay')
-            };
+        const KEY = 'BACC-AS9P-19-KK';
+        const VALS = {'A':-1,'2':-1,'3':-1,'4':-5,'5':-5,'6':5,'7':5,'8':1,'9':1,'10':0,'J':0,'Q':0,'K':0};
 
-            let cardCount = 0;
-            let countHistory = [0];
-            let cardCountingHistory = [];
-            let sessionTimer = null;
-            let cardCountChartInstance = null;
-            let currentPattern = 'streaks';
-            let patternHistory = [];
-            let tutorialStep = 0;
-            
-            // Check initial mute state (should be false now since 'muted' is removed)
-            elements.backgroundVideo.muted = false;
-            
-            const cardValues = {
-                'A': -1, '2': -1, '3': -1, '4': -5, '5': -5, '6': 5, '7': 5,
-                '8': 1, '9': 1, '10': 0, 'J': 0, 'Q': 0, 'K': 0
-            };
-            
-            const tutorialSteps = [
-                {
-                    title: "SYSTEM ONLINE",
-                    text: "Welcome. This is a quick system overview. Press 'Next' to continue.",
-                    element: elements.mainContainer,
-                },
-                {
-                    title: "COUNTING CORE",
-                    text: "This is the primary analysis tab. Use it to track the running count for a statistical advantage.",
-                    element: elements.cardCountingTabBtn,
-                    action: () => elements.cardCountingTabBtn.click()
-                },
-                {
-                    title: "DATA INPUT",
-                    text: "Use this grid to input cards as they are dealt. The system updates the count automatically.",
-                    element: elements.cardSelectionArea,
-                },
-                {
-                    title: "PREDICTION & LIVE COUNT",
-                    text: "This section displays the live count and provides a real-time betting prediction based on the count logic.",
-                    element: document.querySelector('.analysis-panel'),
-                },
-                {
-                    title: "PATTERN ANALYSIS",
-                    text: "Switch to this tab for an alternative strategy based on recognizing and exploiting game patterns.",
-                    element: elements.patternRecognitionTabBtn,
-                    action: () => elements.patternRecognitionTabBtn.click()
-                },
-                {
-                    title: "LOGGING RESULTS",
-                    text: "First, select a pattern. Then, use these buttons to log the result of the last hand to generate a new prediction.",
-                    element: document.querySelector('.last-bet-buttons'),
-                },
-                {
-                    title: "OVERVIEW COMPLETE",
-                    text: "You are now ready to proceed. Good luck.",
-                    element: null,
-                }
-            ];
+        let engine = {
+            count: 0,
+            history: [0],
+            patterns: [],
+            mode: 'trend'
+        };
 
-            const SESSION_DURATION = 43200; // 12 hours
-            const LOCAL_STORAGE_KEY = 'baccarat_session_v3_corrupted';
-            const TUTORIAL_KEY = 'hasSeenTutorial_v3_corrupted';
-            
-            const checkSession = () => {
-                const storedSession = localStorage.getItem(LOCAL_STORAGE_KEY);
-                if (storedSession) {
-                    const sessionData = JSON.parse(storedSession);
-                    if (Date.now() < sessionData.expiresAt) {
-                        // Attempt to play video sound on session check for uninterrupted audio if possible
-                        // (Though modern browsers often require user interaction, success here is a bonus)
-                        elements.backgroundVideo.muted = false; // Ensure unmuted state
-                        elements.backgroundVideo.play().catch(e => {
-                            console.log("Autoplay with sound prevented on session check:", e.message);
-                            // Keep video muted if autoplay with sound fails, and wait for explicit unmute
-                            elements.backgroundVideo.muted = true;
-                            elements.muteBtn.querySelector('i').className = 'fas fa-volume-mute';
-                        });
+        let chart;
 
-                        showMainApp(true); // true means it's a re-load, audio status set above
-                        startCountdownTimer(sessionData.expiresAt);
-                    } else {
-                        logout();
-                    }
-                }
-            };
-            
-            const startCountdownTimer = (expiresAt) => {
-                if (sessionTimer) clearInterval(sessionTimer);
-                sessionTimer = setInterval(() => {
-                    const timeLeft = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
-                    const hours = String(Math.floor(timeLeft / 3600)).padStart(2, '0');
-                    const minutes = String(Math.floor((timeLeft % 3600) / 60)).padStart(2, '0');
-                    const seconds = String(timeLeft % 60).padStart(2, '0');
-                    elements.sessionTimerDisplay.textContent = `${hours}:${minutes}:${seconds}`;
-                    if (timeLeft === 0) logout();
-                }, 1000);
-            };
-            
-            const logout = () => {
-                localStorage.removeItem(LOCAL_STORAGE_KEY);
-                if (sessionTimer) clearInterval(sessionTimer);
-                elements.backgroundVideo.classList.remove('active');
-                elements.backgroundVideo.muted = true; // Mute on logout
-                elements.muteBtn.querySelector('i').className = 'fas fa-volume-mute';
-                elements.mainContainer.classList.remove('show');
-                elements.authOverlay.style.display = 'flex';
-                setTimeout(() => { elements.authOverlay.style.opacity = '1'; }, 50);
-            };
-
-            // Modified showMainApp to handle the video play/unmute logic
-            const showMainApp = (isReload = false) => {
-                elements.authOverlay.style.opacity = '0';
-                setTimeout(() => {
-                    elements.authOverlay.style.display = 'none';
-                    elements.mainContainer.classList.add('show');
-                    elements.backgroundVideo.classList.add('active');
-                    
-                    // Only attempt to unmute/play if it's NOT a reload (i.e., immediately after login)
-                    // On reload, the checkSession logic handles the initial attempt
-                    if (!isReload) {
-                        const video = elements.backgroundVideo;
-                        video.muted = false; // Unmute the video
-                        video.play().catch(e => {
-                            console.log("Autoplay with sound prevented on login:", e.message);
-                            // If it fails (due to browser policy), mute it and show the mute icon
-                            video.muted = true;
-                            elements.muteBtn.querySelector('i').className = 'fas fa-volume-mute';
-                        });
-                        // Update button icon to reflect unmuted state
-                        elements.muteBtn.querySelector('i').className = video.muted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
-                    }
-
-                    updateCardCountingTab();
-                    updatePatternRecognitionTab();
-                    positionTabIndicator();
-                    if (!localStorage.getItem(TUTORIAL_KEY)) {
-                        startTutorial();
-                    }
-                }, 800);
-            };
-
-            const startTutorial = () => {
-                tutorialStep = 0;
-                elements.fullTutorialModal.style.display = 'flex';
-                // Show the overlay mask container for the duration of the tutorial
-                elements.tutorialOverlay.style.display = 'block'; 
-                setTimeout(() => elements.fullTutorialModal.classList.add('show'), 10);
-                showTutorialStep(tutorialStep);
-            };
-
-            const endTutorial = () => {
-                elements.fullTutorialModal.classList.remove('show');
-                setTimeout(() => {
-                    elements.fullTutorialModal.style.display = 'none';
-                    elements.tutorialOverlay.style.display = 'none'; // Hide the mask
-                }, 300);
-                elements.highlightBox.style.display = 'none';
-                localStorage.setItem(TUTORIAL_KEY, 'true');
-            };
-
-
-            const showTutorialStep = (stepIndex) => {
-                const step = tutorialSteps[stepIndex];
-                elements.tutorialTitle.textContent = step.title;
-                elements.tutorialText.textContent = step.text;
-                elements.highlightBox.style.display = 'none';
-                
-                if (step.action) step.action();
-
-                // Wait a moment for layout update after tab switch
-                setTimeout(() => {
-                    if (step.element) {
-                        const rect = step.element.getBoundingClientRect();
-                        elements.highlightBox.style.width = `${rect.width + 20}px`;
-                        elements.highlightBox.style.height = `${rect.height + 20}px`;
-                        elements.highlightBox.style.top = `${rect.top - 10}px`;
-                        elements.highlightBox.style.left = `${rect.left - 10}px`;
-                        elements.highlightBox.style.display = 'block';
-                    }
-                    elements.tutorialNextBtn.textContent = (stepIndex === tutorialSteps.length - 1) ? 'Finish' : 'Next';
-                }, 100);
-            };
-
-
-            elements.tutorialNextBtn.addEventListener('click', () => {
-                tutorialStep++;
-                if (tutorialStep < tutorialSteps.length) showTutorialStep(tutorialStep);
-                else endTutorial();
+        const init = () => {
+            const grid = document.getElementById('card-grid');
+            Object.keys(VALS).forEach(card => {
+                const node = document.createElement('div');
+                node.className = 'card-node';
+                node.innerText = card;
+                node.onclick = () => ingestData(card);
+                grid.appendChild(node);
             });
-            elements.tutorialSkipBtn.addEventListener('click', endTutorial);
-            
-            const getBetRecommendation = (count) => {
-                const absCount = Math.abs(count);
-                let recommendation = count === 0 ? 'Tie' : (count % 2 === 0 ? 'Player' : 'Banker');
-                let tier = '';
-                if (count === 0) tier = 'Zero Count';
-                else if (absCount === 1) tier = 'Perfect';
-                else if (absCount <= 5) tier = 'Low Rise';
-                else if (absCount <= 9) tier = 'Mid Rise';
-                else if (absCount <= 14) tier = 'High Rise';
-                else tier = 'Solid';
-                return { recommendation, tier };
-            };
-            
-            const updateRecommendation = () => {
-                const { recommendation, tier } = getBetRecommendation(cardCount);
-                elements.betSuggestion.textContent = recommendation;
-                elements.countDescription.textContent = `Current Tier: ${tier}`;
-                elements.betAmount.textContent = `${tier} count.`;
 
-                if (recommendation === 'Player') elements.betSuggestion.style.color = 'var(--player-blue)';
-                else if (recommendation === 'Banker') elements.betSuggestion.style.color = 'var(--danger)';
-                else elements.betSuggestion.style.color = 'var(--warning)';
-                return recommendation;
-            };
-
-            const updateCount = (cardName) => {
-                cardCount += cardValues[cardName];
-                countHistory.push(cardCount);
-                elements.currentCount.textContent = cardCount;
-                const suggestedBet = updateRecommendation();
-                cardCountingHistory.push({ card: cardName, count: cardCount, suggestedBet: suggestedBet });
-                updateChart();
-                updateStats();
-                updateHistory();
-            };
-
-            const updateChart = () => {
-                if (cardCountChartInstance) cardCountChartInstance.destroy();
-                const ctx = elements.cardCountChartCanvas.getContext('2d');
-                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                gradient.addColorStop(0, 'rgba(180, 20, 20, 0.5)');
-                gradient.addColorStop(1, 'rgba(180, 20, 20, 0)');
-                cardCountChartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: countHistory.map((_, i) => i),
-                        datasets: [{
-                            data: countHistory, borderColor: 'var(--primary-glow)',
-                            backgroundColor: gradient, fill: true, tension: 0.4,
-                            pointBackgroundColor: 'var(--accent-glow)', pointBorderColor: 'var(--accent-glow)',
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'var(--text-secondary)' } },
-                            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'var(--text-secondary)' } }
-                        }
-                    }
-                });
-            };
-
-            const updateStats = () => {
-                elements.cardsCounted.textContent = cardCountingHistory.length;
-                const decksRemaining = (8 * 52 - cardCountingHistory.length) / 52;
-                elements.decksRemaining.textContent = decksRemaining > 0 ? decksRemaining.toFixed(2) : '0.00';
-            };
-
-            const updateHistory = () => {
-                elements.historyList.innerHTML = '';
-                cardCountingHistory.slice(-5).reverse().forEach(h => {
-                    const item = document.createElement('div');
-                    item.className = 'history-item';
-                    item.textContent = `Input: ${h.card} | Count: ${h.count} | Bet: ${h.suggestedBet}`;
-                    elements.historyList.appendChild(item);
-                });
-            };
-
-            const updateCardCountingTab = () => {
-                updateChart();
-                updateStats();
-                updateHistory();
-                updateRecommendation();
-            };
-            
-            const patternStrategies = {
-                streaks: {
-                    details: 'Bet with a winning streak. If Player wins twice, bet Player. If Banker wins twice, bet Banker.',
-                    recommend: (h) => {
-                        if (h.length < 2) return 'Wait';
-                        const lastTwo = h.slice(-2);
-                        if (lastTwo.every(r => r === 'Player')) return 'Player';
-                        if (lastTwo.every(r => r === 'Banker')) return 'Banker';
-                        return 'Wait';
-                    }
-                },
-                choppy: {
-                    details: 'Bet against the previous outcome, anticipating an alternating pattern (P, B, P, B).',
-                    recommend: (h) => {
-                        if (h.length < 1) return 'Wait';
-                        const last = h[h.length - 1];
-                        if (last === 'Player') return 'Banker';
-                        if (last === 'Banker') return 'Player';
-                        return 'Wait';
-                    }
-                }
-                ,
-                zigZag: {
-                    details: 'Bet on the outcome that breaks a pair. After P, P, bet Banker. After B, B, bet Player.',
-                    recommend: (h) => {
-                        if (h.length < 2) return 'Wait';
-                        const [l2, l1] = h.slice(-2);
-                        if (l1 === l2) return l1 === 'Player' ? 'Banker' : 'Player';
-                        return 'Wait';
-                    }
-                }
-            };
-
-            const updatePatternDetails = () => {
-                elements.patternDetailsText.textContent = patternStrategies[currentPattern].details;
-            };
-
-            const updatePatternRecommendation = () => {
-                const recommendation = patternStrategies[currentPattern].recommend(patternHistory.filter(r => r !== 'Tie'));
-                elements.patternBetSuggestion.textContent = recommendation;
-                const patternName = currentPattern.charAt(0).toUpperCase() + currentPattern.slice(1);
-                elements.patternBetAmount.textContent = `Based on ${patternName} logic.`;
-                if (recommendation === 'Player') elements.patternBetSuggestion.style.color = 'var(--player-blue)';
-                else if (recommendation === 'Banker') elements.patternBetSuggestion.style.color = 'var(--danger)';
-                else elements.patternBetSuggestion.style.color = 'var(--text-secondary)';
-            };
-
-            const updatePatternRecognitionTab = () => {
-                updatePatternDetails();
-                updatePatternRecommendation();
-            };
-
-            const logLastBetResult = (result) => {
-                if (patternHistory.length > 50) patternHistory.shift();
-                patternHistory.push(result);
-                updatePatternRecommendation();
-            };
-            
-            elements.authBtn.addEventListener('click', () => {
-                const key = elements.keyInput.value;
-                elements.authBtn.classList.add('authorizing');
-                elements.authBtn.textContent = 'Authorizing...';
-                elements.authError.classList.remove('show');
-                
-                setTimeout(() => {
-                    elements.authBtn.classList.remove('authorizing');
-                    elements.authBtn.textContent = 'Authorize';
-                    if (key === 'BACC-AS9P-19-KK') {
-                        const expiresAt = Date.now() + (SESSION_DURATION * 1000);
-                        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ key, expiresAt }));
-                        showMainApp(false); // New login, explicitly handle video unmute/play
-                        startCountdownTimer(expiresAt);
-                    } else {
-                        elements.authError.textContent = 'Invalid Access Key.';
-                        elements.authError.classList.add('show');
-                    }
-                }, 1500);
-            });
-            
-            elements.logoutBtn.addEventListener('click', logout);
-            
-            const positionTabIndicator = () => {
-                const activeTab = document.querySelector('.tab-btn.active');
-                if (activeTab) {
-                    elements.tabIndicator.style.width = `${activeTab.offsetWidth}px`;
-                    elements.tabIndicator.style.left = `${activeTab.offsetLeft}px`;
-                }
-            };
-            window.addEventListener('resize', positionTabIndicator);
-
-            elements.tabBtns.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelector('.tab-btn.active').classList.remove('active');
-                    e.target.classList.add('active');
-                    document.querySelector('.tab-content.active').classList.remove('active');
-                    document.getElementById(e.target.dataset.tabId).classList.add('active');
-                    positionTabIndicator();
-                });
-            });
-            
-            elements.muteBtn.addEventListener('click', () => {
-                const video = elements.backgroundVideo;
-                video.muted = !video.muted;
-                elements.muteBtn.querySelector('i').className = video.muted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
-            });
-            elements.cardBtns.forEach(btn => btn.addEventListener('click', (e) => updateCount(e.target.dataset.card)));
-            elements.resetChartBtn.addEventListener('click', () => {
-                cardCount = 0; countHistory = [0]; cardCountingHistory = [];
-                elements.currentCount.textContent = '0';
-                updateCardCountingTab();
-            });
-            
-            elements.patternCards.forEach(card => {
-                card.addEventListener('click', (e) => {
-                    document.querySelector('.pattern-card.active').classList.remove('active');
-                    e.currentTarget.classList.add('active');
-                    currentPattern = e.currentTarget.dataset.pattern;
-                    updatePatternRecognitionTab();
-                });
-            });
-            elements.lastBetBtns.forEach(btn => btn.addEventListener('click', (e) => logLastBetResult(e.target.dataset.result)));
-            
+            setupChart();
             checkSession();
-        });
+            animatePanels();
+        };
+
+        const ingestData = (card) => {
+            const delta = VALS[card];
+            engine.count += delta;
+            engine.history.push(engine.count);
+            
+            updateOracle();
+            updateChart();
+            addLog(`SIGNAL_IN: ${card} | SHIFT: ${delta}`);
+        };
+
+        const updateOracle = () => {
+            const text = document.getElementById('prediction-text');
+            const glow = document.getElementById('glow');
+            const confBar = document.getElementById('conf-fill');
+            const confVal = document.getElementById('conf-val');
+
+            let signal = "WAIT";
+            let color = "var(--text-dim)";
+            let strength = Math.min(Math.abs(engine.count) * 4, 98);
+
+            if (engine.count > 0) {
+                signal = "BANKER";
+                color = "var(--banker)";
+            } else if (engine.count < 0) {
+                signal = "PLAYER";
+                color = "var(--player)";
+            }
+
+            text.innerText = signal;
+            text.style.color = color;
+            text.style.textShadow = `0 0 30px ${color}`;
+            
+            glow.style.background = color;
+            glow.style.opacity = (strength / 100) + 0.1;
+            glow.style.animation = strength > 30 ? `pulse ${2 - (strength/50)}s infinite` : 'none';
+
+            confBar.style.width = strength + "%";
+            confBar.style.background = color;
+            confVal.innerText = strength + "%";
+            confVal.style.color = color;
+        };
+
+        const setupChart = () => {
+            const ctx = document.getElementById('volatility-chart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [0],
+                    datasets: [{
+                        data: [0],
+                        borderColor: '#6d28d9',
+                        borderWidth: 1,
+                        tension: 0.4,
+                        fill: false,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { display: false }, y: { display: false } }
+                }
+            });
+        };
+
+        const updateChart = () => {
+            chart.data.labels.push(engine.history.length);
+            chart.data.datasets[0].data = engine.history;
+            chart.update();
+        };
+
+        const addLog = (msg) => {
+            const list = document.getElementById('log-list');
+            const item = document.createElement('div');
+            item.style.marginBottom = "5px";
+            item.innerText = `> ${msg}`;
+            list.prepend(item);
+        };
+
+        const animatePanels = () => {
+            setTimeout(() => document.getElementById('panel-1').classList.add('show'), 300);
+            setTimeout(() => document.getElementById('panel-2').classList.add('show'), 500);
+        };
+
+        // --- SESSION LOGIC ---
+        document.getElementById('login-btn').onclick = () => {
+            const val = document.getElementById('key-input').value;
+            if(val === KEY) {
+                localStorage.setItem('oracle_sess', Date.now() + 43200000);
+                launch();
+            } else {
+                document.getElementById('err').style.display = 'block';
+            }
+        };
+
+        const launch = () => {
+            document.getElementById('auth-screen').style.opacity = '0';
+            document.getElementById('auth-screen').style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('app-shell').classList.add('active');
+                startTimer();
+            }, 800);
+        };
+
+        const checkSession = () => {
+            const s = localStorage.getItem('oracle_sess');
+            if(s && Date.now() < s) launch();
+        };
+
+        const startTimer = () => {
+            setInterval(() => {
+                const s = localStorage.getItem('oracle_sess');
+                const diff = s - Date.now();
+                if(diff <= 0) location.reload();
+                const h = Math.floor(diff/3600000).toString().padStart(2,'0');
+                const m = Math.floor((diff%3600000)/60000).toString().padStart(2,'0');
+                const s_ = Math.floor((diff%60000)/1000).toString().padStart(2,'0');
+                document.getElementById('timer').innerText = `${h}:${m}:${s_}`;
+            }, 1000);
+        };
+
+        document.getElementById('reset-btn').onclick = () => {
+            engine.count = 0;
+            engine.history = [0];
+            updateOracle();
+            chart.data.labels = [0];
+            chart.data.datasets[0].data = [0];
+            chart.update();
+            document.getElementById('log-list').innerHTML = '';
+            addLog("CORE_PURGE_COMPLETE");
+        };
+
+        document.getElementById('exit-btn').onclick = () => {
+            localStorage.removeItem('oracle_sess');
+            location.reload();
+        };
+
+        document.getElementById('mute-btn').onclick = () => {
+            const v = document.getElementById('bg-video');
+            v.muted = !v.muted;
+            document.getElementById('mute-btn').innerHTML = v.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+        };
+
+        init();
     </script>
 </body>
 </html>
