@@ -693,7 +693,7 @@
                 }
             ];
 
-            const SESSION_DURATION = 2592000; // 12 hours
+            const SESSION_DURATION = 86400; // 12 hours
             const LOCAL_STORAGE_KEY = 'baccarat_session_v3_corrupted';
             const TUTORIAL_KEY = 'hasSeenTutorial_v3_corrupted';
             
@@ -978,7 +978,7 @@
                 setTimeout(() => {
                     elements.authBtn.classList.remove('authorizing');
                     elements.authBtn.textContent = 'Authorize';
-                    if (key === 'BACC-AS9P-19-KK') {
+                    if (key === 'BACC-AS9P-19-44') {
                         const expiresAt = Date.now() + (SESSION_DURATION * 1000);
                         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ key, expiresAt }));
                         showMainApp(false); // New login, explicitly handle video unmute/play
